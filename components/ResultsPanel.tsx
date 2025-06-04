@@ -129,6 +129,14 @@ export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeP
                   </p>
                 </div>
               </div>
+              
+              {/* Note about Vercel */}
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                <p className="text-xs text-amber-800">
+                  <span className="font-semibold">Note:</span> On Vercel, progress updates appear after processing completes. 
+                  The process is working in the background and will show all logs when finished.
+                </p>
+              </div>
             </>
           )}
           
