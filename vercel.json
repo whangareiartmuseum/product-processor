@@ -4,6 +4,9 @@
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 300
+    },
+    "api/*.py": {
+      "runtime": "python3.9"
     }
   }
 } 
