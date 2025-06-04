@@ -10,6 +10,7 @@ The Product Processor app is now successfully deployed on Vercel with full Pytho
 2. **Dependencies**: `requirements.txt` placed in project root (not in `/api`)
 3. **Removed Conflicts**: Deleted `Pipfile`, `runtime.txt`, and `api/__init__.py`
 4. **Simplified Config**: Basic `vercel.json` without extra Python configurations
+5. **Import Approach**: Changed from `subprocess` to direct imports for module access
 
 ### Key Learnings:
 
@@ -22,6 +23,11 @@ The Product Processor app is now successfully deployed on Vercel with full Pytho
 ✅ **Dependencies install automatically** - When `requirements.txt` is in the right place
 
 ✅ **No special configuration needed** - Vercel auto-detects Python files
+
+✅ **Use imports, not subprocess** - When Python serverless functions need to run other Python scripts:
+- Add the script directory to `sys.path`
+- Import modules directly instead of using `subprocess`
+- This ensures installed packages are available
 
 ### Current Status:
 
@@ -41,7 +47,8 @@ https://product-processor-hylhr7kyg-whangarei-art-museum.vercel.app
 
 1. **Do NOT upgrade to Node.js 20.x** until Vercel fixes Python compatibility
 2. **Keep `requirements.txt` in root** - Not in `/api` directory
-3. **Python scripts use subprocess** to call scripts in `/python_scripts`
+3. **Python scripts use direct imports** - Not subprocess calls
+4. **Environment variables** are properly passed to imported modules
 
 ### Environment Variables Set:
 - `SHOPIFY_SHOP_URL`
