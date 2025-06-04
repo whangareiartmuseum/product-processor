@@ -8,10 +8,5 @@
     "api/*.py": {
       "maxDuration": 300
     }
-  },
-  "build": {
-    "env": {
-      "PYTHON_VERSION": "3.9"
-    }
   }
 } 
