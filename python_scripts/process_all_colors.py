@@ -2,7 +2,6 @@ import requests
 import json
 import time
 import argparse
-from tqdm import tqdm
 from PIL import Image
 from io import BytesIO
 from color_extractor_fixed import get_dominant_color, get_complementary_color, generate_text_color_with_contrast, get_contrast_ratio, generate_text_color_from_dominant

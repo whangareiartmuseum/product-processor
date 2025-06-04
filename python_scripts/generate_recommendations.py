@@ -4,18 +4,33 @@ import time
 import os
 import numpy as np
 from openai import OpenAI
-from tqdm import tqdm
 import re
 import logging
 
-# Configure logging
+# Configure logging - check if we can write to filesystem
+log_handlers = [logging.StreamHandler()]  # Always include console output
+
+# Try to add file handler if we have write access
+try:
+    # Check if we're in a serverless environment
+    if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+        # Use /tmp directory for serverless environments
+        log_file = '/tmp/product_recommendations.log'
+    else:
+        # Use current directory for local development
+        log_file = 'product_recommendations.log'
+    
+    # Try to create the file handler
+    file_handler = logging.FileHandler(log_file)
+    log_handlers.append(file_handler)
+except (OSError, IOError):
+    # If we can't write to file, just use console output
+    pass
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('product_recommendations.log'),
-        logging.StreamHandler()
-    ]
+    handlers=log_handlers
 )
 logger = logging.getLogger(__name__)
 

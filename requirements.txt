@@ -1,5 +1,4 @@
 requests
 numpy
 openai
-tqdm
 Pillow 
