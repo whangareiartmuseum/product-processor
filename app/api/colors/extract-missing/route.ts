@@ -1,22 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { runPythonScript } from '@/api_utils/pythonRunner'
 
 export async function POST(request: NextRequest) {
   try {
-    const result = await runPythonScript({
-      scriptName: 'process_all_colors.py'
-      // No args means it will only process products missing colors
-    })
-    
-    return NextResponse.json({
-      success: result.success,
-      logs: result.logs,
-      error: result.error,
-      summary: {
-        message: 'Color extraction for products missing metadata completed',
-        processType: 'missing_only'
+    // Check if we're on Vercel
+    if (process.env.VERCEL_URL) {
+      // Call the Python serverless function
+      const pythonUrl = `https://${process.env.VERCEL_URL}/api/python/colors-missing`
+      
+      const response = await fetch(pythonUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Python API returned ${response.status}`)
       }
-    })
+      
+      const data = await response.json()
+      return NextResponse.json(data)
+    } else {
+      // In development, use the local Python runner
+      const { runPythonScript } = await import('@/api_utils/pythonRunner')
+      
+      const result = await runPythonScript({
+        scriptName: 'process_all_colors.py'
+        // No args means it will only process products missing colors
+      })
+      
+      return NextResponse.json({
+        success: result.success,
+        logs: result.logs,
+        error: result.error,
+        summary: {
+          message: 'Color extraction for products missing metadata completed',
+          processType: 'missing_only'
+        }
+      })
+    }
   } catch (error: any) {
     return NextResponse.json(
       { 
