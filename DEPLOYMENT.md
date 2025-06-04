@@ -1,69 +1,115 @@
-# Deployment Guide for Product Processor
+# Deployment Guide - Vercel
 
-## Vercel Deployment (Recommended)
+This guide will help you deploy the Product Processor app to Vercel with Python Serverless Functions support.
 
-Vercel supports Python through Serverless Functions (Beta) with Python 3.12.
+## Prerequisites
 
-### Prerequisites
+- Vercel account (free tier works)
+- GitHub repository with the Product Processor code
+- Environment variables ready
 
-1. **GitHub Account**: Your code should be in the repository
-2. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
-3. **Environment Variables Ready**: Have your API keys ready
+## Deployment Steps
 
-### Step 1: Connect GitHub to Vercel
+### 1. Connect to Vercel
 
-Since you've already deployed to Vercel, you need to connect GitHub for automatic deployments:
+1. Go to [vercel.com](https://vercel.com) and sign in
+2. Click "Add New Project"
+3. Import your GitHub repository
+4. Select the repository containing the Product Processor code
 
-1. Go to your [Vercel Dashboard](https://vercel.com/whangarei-art-museum/product-processor/settings/git)
-2. Click "Connect Git Repository"
-3. Select GitHub and authorize Vercel
-4. Choose `simonbowerbank/product-processor`
-5. Click "Connect"
+### 2. Configure Build Settings
 
-### Step 2: Verify Environment Variables
+Vercel should auto-detect the Next.js framework. Ensure these settings:
 
-In Vercel Project Settings > Environment Variables, ensure you have:
+- **Framework Preset**: Next.js
+- **Root Directory**: `./` (or the path to your product-processor folder)
+- **Build Command**: `npm run build` (default)
+- **Output Directory**: `.next` (default)
+
+### 3. Configure Python Support
+
+The Python serverless functions are already set up in the `/api` directory:
+- `/api/colors-all.py` - Extract all product colors
+- `/api/colors-missing.py` - Process missing colors only  
+- `/api/colors-single.py` - Single product processing
+- `/api/colors-report.py` - Generate contrast reports
+- `/api/recommendations.py` - AI product recommendations
+- `/api/metafields-inspect.py` - Inspect metafields
+
+Each Python file follows Vercel's serverless function format with a `handler` class.
+
+### 4. Set Environment Variables
+
+In Vercel's project settings, add these environment variables:
 
 ```
 SHOPIFY_SHOP_URL=your-store.myshopify.com
 SHOPIFY_ACCESS_TOKEN=REDACTED_SHOPIFY_TOKEN
-OPENAI_API_KEY=REDACTED_OPENAI_KEY
+OPENAI_API_KEY=REDACTED_OPENAI_KEY_PARTIAL....[your full key]
 ```
 
-### Step 3: Deploy
+### 5. Python Dependencies
 
-Once GitHub is connected, every push will automatically deploy. To manually redeploy:
-
-```bash
-vercel --prod
+The `requirements.txt` file in the `/api` directory specifies the Python packages:
+```
+requests
+numpy
+openai
+tqdm
+Pillow
 ```
 
-### How It Works
+The `Pipfile` in the root specifies Python 3.12 for the runtime.
 
-- **Frontend**: Next.js runs on Vercel's Edge Network
-- **Python Processing**: Python scripts run as Serverless Functions
-- **API Routes**: Next.js routes call Python functions when on Vercel
+### 6. Deploy
 
-### Architecture
+1. Click "Deploy"
+2. Wait for the build to complete (usually 2-3 minutes)
+3. Your app will be live at `https://[your-project-name].vercel.app`
 
-```
-/app/api/            → Next.js API routes
-/api/python/         → Python Serverless Functions
-/python_scripts/     → Shared Python processing logic
-```
+## How It Works
 
-### Limitations
+- **Local Development**: The app uses Node.js to spawn Python processes
+- **Production (Vercel)**: The frontend detects Vercel environment and calls Python serverless functions directly
+- **Automatic Detection**: The app automatically switches between local and serverless modes
 
-- Python functions have a 5-minute timeout (Pro plan extends this)
-- Memory limit is 3GB for serverless functions
-- Cold starts may add 1-2 seconds on first request
+## Troubleshooting
 
-### Monitoring
+### Python Functions Not Working
 
-Check function logs in Vercel Dashboard:
-- Go to Functions tab
-- Click on any function to see logs
-- Monitor for errors or timeouts
+1. Ensure Python files are in the root `/api` directory (not nested)
+2. Check that each Python file has a `handler` class with `do_POST` method
+3. Verify environment variables are set in Vercel dashboard
+
+### 401 Errors
+
+If you see 401 errors, ensure:
+- The Shopify access token is correct
+- Environment variables are properly set in Vercel
+
+### Module Import Errors
+
+The Python scripts import from `python_scripts/` directory. Ensure this directory structure is maintained.
+
+## Testing
+
+After deployment:
+1. Visit your Vercel URL
+2. Try "Inspect Metafields" first (doesn't modify data)
+3. Test other features as needed
+
+## Monitoring
+
+- Check Vercel's Function logs for Python execution details
+- Use the browser console for frontend errors
+- Vercel provides real-time logs for debugging
+
+## Updating
+
+When you push changes to GitHub:
+1. Vercel automatically rebuilds and redeploys
+2. Python dependencies are reinstalled from `requirements.txt`
+3. Environment variables persist across deployments
 
 ## Local Development
 
@@ -74,20 +120,6 @@ npm run dev
 ```
 
 The app automatically detects local environment and runs Python scripts directly.
-
-## Troubleshooting
-
-### Python Dependencies Not Installing
-- Ensure `Pipfile` specifies Python 3.12
-- Check `requirements.txt` in `/api/python/`
-
-### Function Timeouts
-- Break long processes into smaller chunks
-- Consider upgrading to Vercel Pro for longer timeouts
-
-### Import Errors
-- Verify paths in Python functions
-- Check that all dependencies are in requirements.txt
 
 ## Post-Deployment
 
