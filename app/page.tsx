@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { ProcessPanel } from '@/components/ProcessPanel'
 import { ResultsPanel } from '@/components/ResultsPanel'
 
@@ -8,6 +8,8 @@ export default function Home() {
   const [activeProcess, setActiveProcess] = useState<string | null>(null)
   const [results, setResults] = useState<any>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [logs, setLogs] = useState<string[]>([])
+  const eventSourceRef = useRef<EventSource | null>(null)
 
   // Check if we're on Vercel
   const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
@@ -18,14 +20,16 @@ export default function Home() {
       title: 'Extract Colors - All Products',
       description: 'Extract and update colors for all products in your store',
       icon: '🎨',
-      endpoint: isVercel ? '/api/colors-all' : '/api/colors/extract-all'
+      endpoint: isVercel ? '/api/colors-all' : '/api/colors/extract-all',
+      streaming: true
     },
     {
       id: 'extract-missing',
       title: 'Extract Colors - Missing Only',
       description: 'Update products that are missing color metadata',
       icon: '🔍',
-      endpoint: isVercel ? '/api/colors-missing' : '/api/colors/extract-missing'
+      endpoint: isVercel ? '/api/colors-missing' : '/api/colors/extract-missing',
+      streaming: true
     },
     {
       id: 'extract-single',
@@ -47,7 +51,8 @@ export default function Home() {
       title: 'Product Recommendations',
       description: 'Generate AI-powered product recommendations',
       icon: '🤖',
-      endpoint: isVercel ? '/api/recommendations' : '/api/recommendations/generate'
+      endpoint: isVercel ? '/api/recommendations' : '/api/recommendations/generate',
+      streaming: true
     },
     {
       id: 'inspect-metafields',
@@ -76,30 +81,86 @@ export default function Home() {
     try {
       setIsProcessing(true)
       setResults(null)
+      setLogs([])
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(params)
-      })
+      // Find the process to check if it supports streaming
+      const process = processes.find(p => p.endpoint === endpoint)
+      
+      if (process?.streaming && !isVercel) {
+        // Use SSE for streaming progress (for local development with custom backend)
+        const eventSource = new EventSource(`${endpoint}?${new URLSearchParams(params)}`)
+        eventSourceRef.current = eventSource
+        
+        eventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data)
+          
+          if (data.type === 'log') {
+            setLogs(prev => [...prev, data.message])
+          } else if (data.type === 'complete') {
+            setResults(data.results)
+            eventSource.close()
+            setIsProcessing(false)
+          } else if (data.type === 'error') {
+            setResults({
+              success: false,
+              error: data.message
+            })
+            eventSource.close()
+            setIsProcessing(false)
+          }
+        }
+        
+        eventSource.onerror = () => {
+          eventSource.close()
+          setIsProcessing(false)
+          setResults({
+            success: false,
+            error: 'Connection lost'
+          })
+        }
+      } else {
+        // Regular POST request for non-streaming endpoints
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(params)
+        })
 
-      const data = await response.json()
+        const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Process failed')
+        if (!response.ok) {
+          throw new Error(data.error || 'Process failed')
+        }
+
+        // If the response contains logs, set them
+        if (data.logs && Array.isArray(data.logs)) {
+          setLogs(data.logs)
+        }
+
+        setResults(data)
       }
-
-      setResults(data)
     } catch (error: any) {
       setResults({
         success: false,
         error: error.message || 'An unexpected error occurred'
       })
-    } finally {
       setIsProcessing(false)
+    } finally {
+      if (!process?.streaming || isVercel) {
+        setIsProcessing(false)
+      }
     }
+  }
+
+  // Clean up EventSource on unmount
+  const stopProcess = () => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close()
+      eventSourceRef.current = null
+    }
+    setIsProcessing(false)
   }
 
   return (
@@ -145,7 +206,12 @@ export default function Home() {
             <h2 className="text-2xl font-semibold text-gray-700 mb-4">
               Results
             </h2>
-            <ResultsPanel results={results} isProcessing={isProcessing} />
+            <ResultsPanel 
+              results={results} 
+              isProcessing={isProcessing} 
+              logs={logs}
+              onStop={stopProcess}
+            />
           </div>
         </div>
       </div>

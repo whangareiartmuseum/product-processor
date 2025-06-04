@@ -270,7 +270,8 @@ def create_product_embeddings(products):
     Returns:
         dict: Dictionary mapping product IDs to embeddings
     """
-    print("Generating embeddings for all products...")
+    print("\n🤖 Generating embeddings for all products...")
+    print(f"Processing {len(products)} products in batches of {EMBEDDING_BATCH_SIZE}")
     
     # Prepare texts for embedding
     texts = []
@@ -309,8 +310,12 @@ def create_product_embeddings(products):
     
     # Process in batches to avoid API limits
     embeddings_map = {}
+    total_batches = (len(texts) + EMBEDDING_BATCH_SIZE - 1) // EMBEDDING_BATCH_SIZE
     
-    for i in tqdm(range(0, len(texts), EMBEDDING_BATCH_SIZE), desc="Embedding Batches"):
+    for i in range(0, len(texts), EMBEDDING_BATCH_SIZE):
+        batch_num = (i // EMBEDDING_BATCH_SIZE) + 1
+        print(f"📊 Processing batch {batch_num}/{total_batches}...")
+        
         batch_texts = texts[i:i + EMBEDDING_BATCH_SIZE]
         batch_ids = product_ids[i:i + EMBEDDING_BATCH_SIZE]
         
@@ -324,6 +329,7 @@ def create_product_embeddings(products):
         if i + EMBEDDING_BATCH_SIZE < len(texts):
             time.sleep(0.5)
     
+    print(f"✅ Generated embeddings for {len(embeddings_map)} products")
     return embeddings_map
 
 def find_similar_products(products, embeddings_map, products_map, n=CANDIDATE_POOL_SIZE):
@@ -339,7 +345,8 @@ def find_similar_products(products, embeddings_map, products_map, n=CANDIDATE_PO
     Returns:
         dict: Dictionary mapping product IDs to lists of similar product IDs
     """
-    print("Finding similar products based on embedding similarity...")
+    print("\n🔍 Finding similar products based on embedding similarity...")
+    print("Calculating cosine similarity between all product pairs...")
     
     # Convert embeddings to numpy arrays for faster processing
     product_ids = list(embeddings_map.keys())
@@ -354,8 +361,13 @@ def find_similar_products(products, embeddings_map, products_map, n=CANDIDATE_PO
     
     # Find top n similar products for each product
     similar_products = {}
+    total_products = len(product_ids)
     
-    for i, product_id in enumerate(tqdm(product_ids, desc="Finding Similar Products")):
+    for i, product_id in enumerate(product_ids):
+        # Progress update every 100 products
+        if (i + 1) % 100 == 0:
+            print(f"📊 Progress: {i + 1}/{total_products} products analyzed ({(i + 1)/total_products*100:.1f}%)")
+        
         current_product = products_map.get(product_id, {})
         
         # Get similarity scores for current product
@@ -442,6 +454,7 @@ def find_similar_products(products, embeddings_map, products_map, n=CANDIDATE_PO
         similar_ids = [product_ids[idx] for idx in top_indices]
         similar_products[product_id] = similar_ids
     
+    print(f"✅ Found similar products for {len(similar_products)} items")
     return similar_products
 
 def generate_related_products_explanation(product, candidates, all_products_map):
@@ -737,9 +750,16 @@ def is_likely_duplicate(product1, product2, similarity_score):
 def main():
     """Main function to process all products and update related products."""
     try:
-        print("Starting the Shopify related products generator using embeddings + GPT-4o...")
-        print(f"Will suggest up to {MAX_RELATED_PRODUCTS} related products per product.")
-        print("Note: Out-of-stock products will be excluded from recommendations.")
+        print("\n🚀 Starting the Shopify Related Products Generator")
+        print("=" * 60)
+        print("Using OpenAI embeddings + GPT-4o for intelligent recommendations")
+        print(f"Configuration:")
+        print(f"  • Max recommendations per product: {MAX_RELATED_PRODUCTS}")
+        print(f"  • Candidate pool size: {CANDIDATE_POOL_SIZE}")
+        print(f"  • Minimum similarity threshold: {MIN_SIMILARITY_THRESHOLD}")
+        print(f"  • Prioritize same collection: {PRIORITIZE_SAME_COLLECTION}")
+        print(f"  • Exclude out-of-stock products: Yes")
+        print("=" * 60)
         
         # Get all products with descriptions
         print("Fetching all products with descriptions...")
@@ -766,7 +786,8 @@ def main():
         similar_products_map = find_similar_products(cleaned_products, embeddings_map, products_map)
         
         # Process each product with GPT-4o to generate explanations
-        print("\nGenerating detailed recommendations with GPT-4o...")
+        print("\n🤖 Generating detailed recommendations with GPT-4o...")
+        print(f"This will analyze each product and select the best related items")
         related_products_map = {}
         
         # Start from the specified product number
@@ -776,12 +797,14 @@ def main():
             return
         
         products_to_process = cleaned_products[start_index:]
-        print(f"Starting from product {START_FROM_PRODUCT} ({total_products - start_index} products remaining)")
+        print(f"\n📦 Starting from product {START_FROM_PRODUCT} ({total_products - start_index} products remaining)")
+        print(f"Estimated time: ~{(total_products - start_index) * 0.5 / 60:.1f} minutes")
+        print("=" * 60)
         
-        for i, product in enumerate(tqdm(products_to_process, desc="Processing Products")):
+        for i, product in enumerate(products_to_process):
             actual_index = start_index + i + 1  # Actual product number (1-indexed)
             product_id = product['id']
-            print(f"\nProcessing {actual_index}/{total_products}: {product['title']} ({product_id})")
+            print(f"\n📦 [{actual_index}/{total_products}] Processing: {product['title'][:50]}...")
             
             # Get candidate related products
             candidates = similar_products_map.get(product_id, [])
@@ -803,6 +826,12 @@ def main():
                 print(f"✅ Successfully updated with {num_related} related products")
             else:
                 print(f"❌ Failed to update related products")
+            
+            # Progress update every 10 products
+            if actual_index % 10 == 0:
+                progress_pct = actual_index / total_products * 100
+                print(f"\n📊 Overall Progress: {actual_index}/{total_products} ({progress_pct:.1f}%)")
+                print(f"   Successful: {sum(1 for p_id in related_products_map if related_products_map[p_id].get('related_ids'))}")
             
             # Slight delay to avoid rate limiting
             time.sleep(0.5)

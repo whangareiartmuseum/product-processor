@@ -423,6 +423,7 @@ def process_all_products():
     print("=" * 60)
     
     # Fetch all products
+    print("📡 Connecting to Shopify API...")
     print("Fetching all products from Shopify...")
     all_products = get_all_products_with_colors()
     total_products = len(all_products)
@@ -434,26 +435,41 @@ def process_all_products():
     print(f"✅ Found {total_products} products total.")
     
     # Filter products with images
+    print("\n🔍 Analyzing product images...")
     products_with_images = [p for p in all_products if get_product_image_url(p)]
     products_without_images = total_products - len(products_with_images)
     
     if products_without_images > 0:
         print(f"⚠️  {products_without_images} products have no images and will be skipped.")
     
-    print(f"\n🎨 Extracting colors from {len(products_with_images)} products...")
+    print(f"\n🎨 Starting color extraction for {len(products_with_images)} products...")
+    print("This process will:")
+    print("  1. Download each product image")
+    print("  2. Extract dominant color")
+    print("  3. Generate complementary color")
+    print("  4. Generate text color with proper contrast")
+    print("  5. Update product metafields")
+    print("\nEstimated time: ~{:.1f} minutes".format(len(products_with_images) * 0.5 / 60))
+    print("=" * 60)
     
     successful = 0
     failed = 0
     
-    for product in tqdm(products_with_images, desc="Processing products"):
+    for i, product in enumerate(products_with_images, 1):
+        print(f"\n📦 [{i}/{len(products_with_images)}] Processing: {product.get('title', 'Unknown')[:50]}...")
         success, message = process_product(product)
         
         if success:
             successful += 1
-            tqdm.write(f"✅ {product.get('title', 'Unknown')}: {message}")
+            print(f"✅ {message}")
         else:
             failed += 1
-            tqdm.write(f"❌ {product.get('title', 'Unknown')}: {message}")
+            print(f"❌ {message}")
+        
+        # Progress update every 10 products
+        if i % 10 == 0:
+            print(f"\n📊 Progress: {i}/{len(products_with_images)} products processed ({i/len(products_with_images)*100:.1f}%)")
+            print(f"   Successful: {successful}, Failed: {failed}")
         
         # Rate limiting
         time.sleep(0.5)
@@ -468,10 +484,12 @@ def process_empty_only():
     print("=" * 60)
     
     # Fetch all products
+    print("📡 Connecting to Shopify API...")
     print("Fetching all products from Shopify...")
     all_products = get_all_products_with_colors()
     
     # Filter products that need updates
+    print("\n🔍 Checking which products need color updates...")
     products_to_update = []
     for product in all_products:
         if get_product_image_url(product) and has_empty_color_metafields(product):
@@ -483,25 +501,34 @@ def process_empty_only():
         print("✨ All products with images already have complete color data!")
         return
     
-    print(f"\n🎨 Extracting colors from {len(products_to_update)} products...")
+    print(f"\n🎨 Starting color extraction for {len(products_to_update)} products...")
+    print("This process will update only products missing color metadata.")
+    print(f"Estimated time: ~{len(products_to_update) * 0.5 / 60:.1f} minutes")
+    print("=" * 60)
     
     successful = 0
     failed = 0
     
-    for product in tqdm(products_to_update, desc="Processing products"):
+    for i, product in enumerate(products_to_update, 1):
         # Show current color status
         color_status = check_color_metafields(product)
         missing = [k for k, v in color_status.items() if not v['exists']]
-        tqdm.write(f"\n📦 {product.get('title', 'Unknown')} - Missing: {', '.join(missing)}")
+        print(f"\n📦 [{i}/{len(products_to_update)}] {product.get('title', 'Unknown')[:50]}")
+        print(f"   Missing fields: {', '.join(missing)}")
         
         success, message = process_product(product)
         
         if success:
             successful += 1
-            tqdm.write(f"✅ {message}")
+            print(f"✅ {message}")
         else:
             failed += 1
-            tqdm.write(f"❌ {message}")
+            print(f"❌ {message}")
+        
+        # Progress update every 10 products
+        if i % 10 == 0:
+            print(f"\n📊 Progress: {i}/{len(products_to_update)} products processed ({i/len(products_to_update)*100:.1f}%)")
+            print(f"   Successful: {successful}, Failed: {failed}")
         
         # Rate limiting
         time.sleep(0.5)
@@ -589,6 +616,7 @@ def generate_contrast_report():
     print("=" * 60)
     
     # Fetch all products
+    print("📡 Connecting to Shopify API...")
     print("Fetching all products from Shopify...")
     all_products = get_all_products_with_colors()
     total_products = len(all_products)
@@ -604,10 +632,16 @@ def generate_contrast_report():
     products_with_colors = 0
     products_missing_colors = 0
     
-    print("\nAnalyzing color contrast ratios...")
-    for product in tqdm(all_products, desc="Analyzing products"):
+    print("\n🔍 Analyzing color contrast ratios...")
+    print("Checking WCAG compliance for text readability...")
+    
+    for i, product in enumerate(all_products, 1):
         product_title = product.get('title', 'Unknown')
         product_id = product.get('id', '')
+        
+        # Progress indicator every 50 products
+        if i % 50 == 0:
+            print(f"📊 Progress: {i}/{total_products} products analyzed ({i/total_products*100:.1f}%)")
         
         # Check color metafields
         color_status = check_color_metafields(product)
@@ -640,6 +674,8 @@ def generate_contrast_report():
             })
         else:
             products_missing_colors += 1
+    
+    print(f"\n✅ Analysis complete! Processed {total_products} products.")
     
     # Sort report by contrast ratio (lowest first)
     report_data.sort(key=lambda x: x['contrast_ratio'])

@@ -9,6 +9,7 @@ interface Process {
   icon: string
   endpoint: string
   requiresInput?: boolean
+  streaming?: boolean
 }
 
 interface ProcessPanelProps {
