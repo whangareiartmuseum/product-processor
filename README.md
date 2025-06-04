@@ -35,6 +35,25 @@ Your app is deployed on Vercel with full Python support for serverless functions
 - Clear unwanted metafields
 - Clean up and delete unnecessary metadata
 
+## 🎨 Features
+
+### 1. Extract Colors - All Products
+Processes every product in your store to extract and save color metadata.
+- Extracts dominant color from product images
+- Generates complementary colors
+- Calculates text colors with proper contrast ratios
+- **Real-time progress updates** showing:
+  - Current product being processed
+  - Progress percentage and time estimates
+  - Success/failure counts
+  - Detailed status messages
+
+### 2. Extract Colors - Missing Only
+Updates only products that are missing color metadata.
+- Identifies products with incomplete color data
+- Processes only what needs updating
+- **Live progress tracking** with product counts
+
 ## Tech Stack
 
 - **Frontend**: Next.js 15 with TypeScript and Tailwind CSS
