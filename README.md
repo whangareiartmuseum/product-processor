@@ -2,23 +2,19 @@
 
 A powerful web-based tool for managing Shopify product colors, recommendations, and metadata. Built with Next.js and Python.
 
-## ⚠️ Important: Deployment Platform Choice
+## 🚀 Deployment Status
 
-**Vercel has discontinued Python support**. While the UI will work beautifully on Vercel, the Python processing features will not function.
+This application uses **Vercel's Python Serverless Functions** (Beta) for processing tasks.
 
-### 🚀 Recommended Deployment: Railway
+### Features
 
-For full functionality, deploy to [Railway](https://railway.app):
-- Supports both Node.js and Python
-- One-click deploy from GitHub
-- Free tier available
-- See `DEPLOYMENT_RAILWAY.md` for instructions
+- **Python Support**: Uses Vercel's Python 3.12 runtime (Beta)
+- **Hybrid Architecture**: Next.js frontend with Python backend processing
+- **Automatic Deployments**: Push to GitHub to deploy automatically
 
-### Alternative Options:
-- **Local Development**: Run with `npm run dev` for full functionality
-- **Render.com**: Supports Docker deployments
-- **Heroku**: Classic platform with Python buildpack
-- **Google Cloud Run**: For containerized deployments
+### Current Deployment
+
+Your app is deployed on Vercel with full Python support for serverless functions.
 
 ## Features
 

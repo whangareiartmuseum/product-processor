@@ -1,46 +1,28 @@
 # Deployment Guide for Product Processor
 
-## Prerequisites
+## Vercel Deployment (Recommended)
 
-1. **GitHub Account**: Create a repository for your code
+Vercel supports Python through Serverless Functions (Beta) with Python 3.12.
+
+### Prerequisites
+
+1. **GitHub Account**: Your code should be in the repository
 2. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
-3. **Python Dependencies**: Ensure all scripts work locally first
+3. **Environment Variables Ready**: Have your API keys ready
 
-## Step 1: Prepare for Deployment
+### Step 1: Connect GitHub to Vercel
 
-1. Test locally:
-```bash
-npm run dev
-```
+Since you've already deployed to Vercel, you need to connect GitHub for automatic deployments:
 
-2. Ensure all Python scripts use environment variables (already done)
+1. Go to your [Vercel Dashboard](https://vercel.com/whangarei-art-museum/product-processor/settings/git)
+2. Click "Connect Git Repository"
+3. Select GitHub and authorize Vercel
+4. Choose `simonbowerbank/product-processor`
+5. Click "Connect"
 
-3. Test a few processes to ensure they work
+### Step 2: Verify Environment Variables
 
-## Step 2: Push to GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial commit - Product Processor web app"
-git branch -M main
-git remote add origin YOUR_GITHUB_REPO_URL
-git push -u origin main
-```
-
-## Step 3: Deploy to Vercel
-
-1. Go to [vercel.com](https://vercel.com) and click "New Project"
-2. Import your GitHub repository
-3. Configure the project:
-   - Framework Preset: Next.js
-   - Root Directory: `./` (or `product-processor` if in a subdirectory)
-   - Build Command: `npm run build` (auto-detected)
-   - Output Directory: `.next` (auto-detected)
-
-## Step 4: Set Environment Variables
-
-In Vercel Project Settings > Environment Variables, add:
+In Vercel Project Settings > Environment Variables, ensure you have:
 
 ```
 SHOPIFY_SHOP_URL=your-store.myshopify.com
@@ -48,31 +30,64 @@ SHOPIFY_ACCESS_TOKEN=REDACTED_SHOPIFY_TOKEN
 OPENAI_API_KEY=REDACTED_OPENAI_KEY
 ```
 
-## Step 5: Deploy
+### Step 3: Deploy
 
-Click "Deploy" and Vercel will:
-1. Install dependencies
-2. Build the Next.js app
-3. Deploy to their edge network
-4. Provide you with a URL
+Once GitHub is connected, every push will automatically deploy. To manually redeploy:
 
-## Important Notes
+```bash
+vercel --prod
+```
 
-### Python Runtime
-Vercel provides Python runtime in their serverless functions. However, for complex Python scripts:
-- Consider breaking long-running processes into smaller chunks
-- Use background jobs for processes that take > 5 minutes
-- Monitor function logs in Vercel dashboard
+### How It Works
 
-### API Limits
-- Vercel functions have a 5-minute timeout on Pro plans
-- Consider implementing progress tracking for long processes
-- Use proper error handling and retry logic
+- **Frontend**: Next.js runs on Vercel's Edge Network
+- **Python Processing**: Python scripts run as Serverless Functions
+- **API Routes**: Next.js routes call Python functions when on Vercel
 
-### Security
-- Never commit `.env.local` to Git
-- Rotate API keys regularly
-- Use Vercel's environment variable encryption
+### Architecture
+
+```
+/app/api/            → Next.js API routes
+/api/python/         → Python Serverless Functions
+/python_scripts/     → Shared Python processing logic
+```
+
+### Limitations
+
+- Python functions have a 5-minute timeout (Pro plan extends this)
+- Memory limit is 3GB for serverless functions
+- Cold starts may add 1-2 seconds on first request
+
+### Monitoring
+
+Check function logs in Vercel Dashboard:
+- Go to Functions tab
+- Click on any function to see logs
+- Monitor for errors or timeouts
+
+## Local Development
+
+For development:
+
+```bash
+npm run dev
+```
+
+The app automatically detects local environment and runs Python scripts directly.
+
+## Troubleshooting
+
+### Python Dependencies Not Installing
+- Ensure `Pipfile` specifies Python 3.12
+- Check `requirements.txt` in `/api/python/`
+
+### Function Timeouts
+- Break long processes into smaller chunks
+- Consider upgrading to Vercel Pro for longer timeouts
+
+### Import Errors
+- Verify paths in Python functions
+- Check that all dependencies are in requirements.txt
 
 ## Post-Deployment
 
@@ -80,23 +95,6 @@ Vercel provides Python runtime in their serverless functions. However, for compl
 2. Monitor logs in Vercel dashboard
 3. Set up alerts for errors
 4. Consider adding authentication for production use
-
-## Troubleshooting
-
-### Python Dependencies Not Found
-- Vercel automatically installs from requirements.txt
-- Ensure all dependencies are listed
-- Check function logs for specific errors
-
-### Timeout Errors
-- Break long processes into batches
-- Implement progress saving
-- Consider using Vercel's Edge Functions for lighter tasks
-
-### Memory Issues
-- Vercel functions have memory limits
-- Optimize Python scripts for memory usage
-- Process data in chunks
 
 ## Support
 

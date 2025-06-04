@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "==2.31.0"
+Pillow = "==10.2.0"
+numpy = "==1.24.3"
+tqdm = "==4.66.1"
+openai = "==1.12.0"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12" 
