@@ -11,6 +11,8 @@ The Product Processor app is now successfully deployed on Vercel with full Pytho
 3. **Removed Conflicts**: Deleted `Pipfile`, `runtime.txt`, and `api/__init__.py`
 4. **Simplified Config**: Basic `vercel.json` without extra Python configurations
 5. **Import Approach**: Changed from `subprocess` to direct imports for module access
+6. **File Naming**: Renamed `color_extractor.py` to `color_extractor_fixed.py` to match imports
+7. **Environment Variables**: Updated all scripts to use env vars instead of hardcoded credentials
 
 ### Key Learnings:
 
@@ -28,6 +30,8 @@ The Product Processor app is now successfully deployed on Vercel with full Pytho
 - Add the script directory to `sys.path`
 - Import modules directly instead of using `subprocess`
 - This ensures installed packages are available
+
+✅ **File naming matters** - Ensure import names match actual file names
 
 ### Current Status:
 
@@ -49,6 +53,7 @@ https://product-processor-hylhr7kyg-whangarei-art-museum.vercel.app
 2. **Keep `requirements.txt` in root** - Not in `/api` directory
 3. **Python scripts use direct imports** - Not subprocess calls
 4. **Environment variables** are properly passed to imported modules
+5. **Check file names** match import statements exactly
 
 ### Environment Variables Set:
 - `SHOPIFY_SHOP_URL`
