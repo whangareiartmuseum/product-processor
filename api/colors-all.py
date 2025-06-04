@@ -27,9 +27,8 @@ class handler(BaseHTTPRequestHandler):
                 try:
                     # Import the module
                     import process_all_colors
-                    # Call main with --update-all flag
-                    sys.argv = ['process_all_colors.py', '--update-all']
-                    process_all_colors.main()
+                    # Call process_all_products directly
+                    process_all_colors.process_all_products()
                     success = True
                     error = None
                 except Exception as e:

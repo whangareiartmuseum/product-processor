@@ -27,9 +27,8 @@ class handler(BaseHTTPRequestHandler):
                 try:
                     # Import the module
                     import process_all_colors
-                    # Call main with report flags
-                    sys.argv = ['process_all_colors.py', '--report', '--contrast-type', 'comp_text']
-                    process_all_colors.main()
+                    # Call generate_contrast_report directly
+                    process_all_colors.generate_contrast_report()
                     success = True
                     error = None
                 except Exception as e:

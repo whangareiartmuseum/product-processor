@@ -45,13 +45,68 @@ class handler(BaseHTTPRequestHandler):
             # Import and run the script
             with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
                 try:
-                    # Import the module
+                    # Import required modules
                     import process_single_product
-                    # Call main with product input
-                    sys.argv = ['process_single_product.py', product_input]
-                    process_single_product.main()
-                    success = True
-                    error = None
+                    
+                    # Process the product directly without confirmation
+                    print(f"\n🔍 Processing product: {product_input}")
+                    print("=" * 60)
+                    
+                    # Get product
+                    product = process_single_product.get_product_by_id(product_input)
+                    if not product:
+                        raise Exception(f"Product not found: {product_input}")
+                    
+                    print(f"✅ Found product: {product.get('title', 'Unknown')}")
+                    
+                    # Get image URL
+                    featured_image = product.get('featuredImage', {})
+                    image_url = featured_image.get('url') if featured_image else None
+                    
+                    if not image_url:
+                        images = product.get('images', {}).get('edges', [])
+                        if images:
+                            image_url = images[0].get('node', {}).get('url')
+                    
+                    if not image_url:
+                        raise Exception("No product image found")
+                    
+                    # Download and process image
+                    print("\n🎨 Extracting colors...")
+                    image = process_single_product.download_image(image_url)
+                    if not image:
+                        raise Exception("Failed to download image")
+                    
+                    # Import color extractor functions
+                    from color_extractor_fixed import get_dominant_color, get_complementary_color, generate_text_color_from_dominant, get_contrast_ratio
+                    
+                    # Extract colors
+                    dominant_colors = get_dominant_color(image, num_colors=1)
+                    if not dominant_colors:
+                        raise Exception("Failed to extract dominant color")
+                    
+                    dominant_color = dominant_colors[0]['hex']
+                    complementary_color = get_complementary_color(dominant_color)
+                    text_color = generate_text_color_from_dominant(dominant_color, complementary_color)
+                    
+                    # Calculate contrasts
+                    comp_text_contrast = get_contrast_ratio(complementary_color, text_color)
+                    
+                    print(f"\n✨ COLORS GENERATED:")
+                    print(f"   Dominant: {dominant_color}")
+                    print(f"   Complementary: {complementary_color}")
+                    print(f"   Text: {text_color}")
+                    print(f"   Complementary↔Text contrast: {comp_text_contrast:.2f}:1")
+                    
+                    # Update metafields
+                    print("\n📤 Updating metafields...")
+                    if process_single_product.update_product_colors(product.get('id'), dominant_color, complementary_color, text_color):
+                        print("✅ Colors successfully saved!")
+                        success = True
+                        error = None
+                    else:
+                        raise Exception("Failed to save colors")
+                        
                 except Exception as e:
                     success = False
                     error = str(e)
