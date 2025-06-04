@@ -1,5 +1,0 @@
-requests
-numpy
-openai
-tqdm
-Pillow>=9.0.0 
