@@ -8,6 +8,10 @@ This guide will help you deploy the Product Processor app to Vercel with Python 
 - GitHub repository with the Product Processor code
 - Environment variables ready
 
+## Important Note on Node.js Version
+
+⚠️ **Critical**: This project requires Node.js 18.x for Python serverless functions to work properly. The `package.json` is configured with `"engines": { "node": "18.x" }` to ensure compatibility. Do not change this to Node.js 20.x or higher as it will cause Python functions to fail.
+
 ## Deployment Steps
 
 ### 1. Connect to Vercel
@@ -25,6 +29,7 @@ Vercel should auto-detect the Next.js framework. Ensure these settings:
 - **Root Directory**: `./` (or the path to your product-processor folder)
 - **Build Command**: `npm run build` (default)
 - **Output Directory**: `.next` (default)
+- **Node.js Version**: Will use 18.x from package.json
 
 ### 3. Configure Python Support
 
@@ -52,14 +57,14 @@ OPENAI_API_KEY=REDACTED_OPENAI_KEY_PARTIAL....[your full key]
 
 The `requirements.txt` file in the root directory specifies the Python packages:
 ```
-requests==2.31.0
-numpy==1.24.3
-openai==1.12.0
-tqdm==4.66.1
-Pillow==10.2.0
+requests
+numpy
+openai
+tqdm
+Pillow
 ```
 
-The `Pipfile` in the root specifies Python 3.12 for the runtime.
+Vercel will automatically install these dependencies during deployment.
 
 ### 6. Deploy
 
@@ -81,17 +86,25 @@ The `Pipfile` in the root specifies Python 3.12 for the runtime.
 2. Check that each Python file has a `handler` class with `do_POST` method
 3. Verify environment variables are set in Vercel dashboard
 4. Ensure `requirements.txt` is in the project root (not in `/api`)
+5. Confirm Node.js 18.x is being used (check build logs)
 
-### 401 Errors
+### Build Failures
 
-If you see 401 errors, ensure:
-- The Shopify access token is correct
-- Environment variables are properly set in Vercel
+If the build fails with pip errors:
+- Ensure you're using Node.js 18.x (specified in package.json)
+- Check that `requirements.txt` doesn't have conflicting versions
+- Verify all package names are correct
+
+### "Unable to find any supported Python versions" Error
+
+This error occurs when using Node.js 20.x or higher. The fix is already implemented:
+- `package.json` specifies `"engines": { "node": "18.x" }`
+- Do not override this setting in Vercel project settings
 
 ### Module Import Errors
 
 - Ensure `requirements.txt` is in the project root directory
-- Check that all required packages are listed with versions
+- Check that all required packages are listed
 - The Python scripts import from `python_scripts/` directory - ensure this directory structure is maintained
 
 ## Testing
