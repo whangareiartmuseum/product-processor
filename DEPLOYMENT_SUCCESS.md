@@ -14,6 +14,16 @@ The Product Processor app is now successfully deployed on Vercel with full Pytho
 6. **File Naming**: Renamed `color_extractor.py` to `color_extractor_fixed.py` to match imports
 7. **Environment Variables**: Updated all scripts to use env vars instead of hardcoded credentials
 
+### Python Handler EOF Error Fix:
+
+Fixed EOF errors when Python scripts tried to read input in serverless environment:
+- **colors-report.py**: Calls `generate_contrast_report()` directly instead of `main()`
+- **colors-all.py**: Calls `process_all_products()` directly (removed invalid `--update-all` flag)
+- **colors-missing.py**: Changed from subprocess to imports, calls `process_empty_only()`
+- **colors-single.py**: Processes products directly without confirmation prompts
+
+**Key Learning**: Never use `input()` or interactive menus in serverless functions!
+
 ### Key Learnings:
 
 ✅ **Python works on Vercel** - But requires specific setup:
