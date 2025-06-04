@@ -1,5 +1,5 @@
-requests
-numpy
-openai
-tqdm
-Pillow>=9.0.0 
+requests==2.31.0
+numpy==1.24.3
+openai==1.12.0
+tqdm==4.66.1
+Pillow==10.2.0 

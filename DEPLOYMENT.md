@@ -50,13 +50,13 @@ OPENAI_API_KEY=REDACTED_OPENAI_KEY_PARTIAL....[your full key]
 
 ### 5. Python Dependencies
 
-The `requirements.txt` file in the `/api` directory specifies the Python packages:
+The `requirements.txt` file in the root directory specifies the Python packages:
 ```
-requests
-numpy
-openai
-tqdm
-Pillow
+requests==2.31.0
+numpy==1.24.3
+openai==1.12.0
+tqdm==4.66.1
+Pillow==10.2.0
 ```
 
 The `Pipfile` in the root specifies Python 3.12 for the runtime.
@@ -80,6 +80,7 @@ The `Pipfile` in the root specifies Python 3.12 for the runtime.
 1. Ensure Python files are in the root `/api` directory (not nested)
 2. Check that each Python file has a `handler` class with `do_POST` method
 3. Verify environment variables are set in Vercel dashboard
+4. Ensure `requirements.txt` is in the project root (not in `/api`)
 
 ### 401 Errors
 
@@ -89,7 +90,9 @@ If you see 401 errors, ensure:
 
 ### Module Import Errors
 
-The Python scripts import from `python_scripts/` directory. Ensure this directory structure is maintained.
+- Ensure `requirements.txt` is in the project root directory
+- Check that all required packages are listed with versions
+- The Python scripts import from `python_scripts/` directory - ensure this directory structure is maintained
 
 ## Testing
 
