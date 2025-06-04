@@ -5,15 +5,16 @@ Update products with poor color contrast ratios.
 
 import requests
 import json
+import os
 import time
 from tqdm import tqdm
 from PIL import Image
 from io import BytesIO
 from color_extractor_fixed import get_dominant_color, get_complementary_color, generate_text_color_from_dominant, get_contrast_ratio
 
-# Shopify API Configuration
-SHOP_URL = "your-store.myshopify.com"
-ACCESS_TOKEN = "REDACTED_SHOPIFY_TOKEN"
+# Shopify API Configuration from environment
+SHOP_URL = os.getenv('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
+ACCESS_TOKEN = os.getenv('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
 GRAPHQL_URL = f"https://{SHOP_URL}/admin/api/2024-01/graphql.json"
 
 def get_all_products_with_colors(cursor=None, products=None):
