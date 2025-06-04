@@ -1,8 +1,12 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && pip install -r requirements.txt",
   "outputDirectory": ".next",
   "functions": {
     "app/api/**/*.ts": {
+      "maxDuration": 300
+    },
+    "api/python/*.py": {
+      "runtime": "python3.9",
       "maxDuration": 300
     }
   },
