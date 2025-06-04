@@ -2,6 +2,28 @@
 
 A powerful web-based tool for managing Shopify product colors, recommendations, and metadata. Built with Next.js and deployed on Vercel.
 
+## ⚠️ Important: Python Runtime on Vercel
+
+**Current Limitation**: The Python scripts cannot run directly on Vercel's serverless platform as spawned processes. This affects all processing features.
+
+### Solutions:
+
+1. **Local Development** (Immediate Solution)
+   - Run the app locally with `npm run dev`
+   - Ensure Python 3 and all dependencies are installed
+   - All features will work perfectly
+
+2. **Production Deployment Options**:
+   - **Option A**: Deploy the UI on Vercel, run Python scripts on a separate server (AWS Lambda, Google Cloud Functions, etc.)
+   - **Option B**: Use a platform that supports both Node.js and Python (Heroku, Railway, Render)
+   - **Option C**: Convert Python scripts to TypeScript (significant effort required)
+   - **Option D**: Use Docker on platforms like Google Cloud Run or AWS ECS
+
+3. **Recommended Approach for Production**:
+   - Keep the beautiful UI on Vercel
+   - Deploy Python scripts as separate microservices
+   - Update the API routes to call these external services
+
 ## Features
 
 ### 🎨 Color Processing

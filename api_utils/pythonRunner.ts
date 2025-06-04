@@ -1,10 +1,28 @@
 import { spawn } from 'child_process'
 import path from 'path'
+import { exec } from 'child_process'
+import { promisify } from 'util'
+
+const execAsync = promisify(exec)
 
 interface PythonRunnerOptions {
   scriptName: string
   args?: string[]
   env?: Record<string, string>
+}
+
+async function checkPythonAvailable(): Promise<boolean> {
+  try {
+    await execAsync('python3 --version')
+    return true
+  } catch {
+    try {
+      await execAsync('python --version')
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 export async function runPythonScript({
@@ -17,6 +35,27 @@ export async function runPythonScript({
   error?: string
   data?: any
 }> {
+  // Check if Python is available
+  const pythonAvailable = await checkPythonAvailable()
+  
+  if (!pythonAvailable) {
+    return {
+      success: false,
+      logs: [
+        'Python is not available in this environment.',
+        'This is a known limitation when running on Vercel.',
+        '',
+        'To use this feature:',
+        '1. Run the application locally with "npm run dev"',
+        '2. Make sure Python 3 and all dependencies are installed',
+        '3. Or deploy to a platform that supports Python',
+        '',
+        'See README.md for deployment alternatives.'
+      ],
+      error: 'Python runtime not available on Vercel serverless platform'
+    }
+  }
+
   return new Promise((resolve) => {
     const logs: string[] = []
     const scriptPath = path.join(process.cwd(), 'python_scripts', scriptName)
@@ -65,7 +104,11 @@ export async function runPythonScript({
     pythonProcess.on('error', (err) => {
       resolve({
         success: false,
-        logs,
+        logs: [
+          'Failed to start Python process.',
+          'Make sure Python 3 is installed and available in PATH.',
+          `Error: ${err.message}`
+        ],
         error: `Failed to start process: ${err.message}`
       })
     })
