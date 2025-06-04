@@ -222,6 +222,7 @@ export default function Home() {
               isProcessing={isProcessing} 
               logs={logs}
               onStop={stopProcess}
+              activeProcessId={activeProcess || undefined}
             />
           </div>
         </div>

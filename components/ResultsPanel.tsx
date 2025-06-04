@@ -5,29 +5,131 @@ interface ResultsPanelProps {
   isProcessing: boolean
   logs?: string[]
   onStop?: () => void
+  activeProcessId?: string
 }
 
-export function ResultsPanel({ results, isProcessing, logs = [], onStop }: ResultsPanelProps) {
+export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeProcessId }: ResultsPanelProps) {
+  // Get process-specific information
+  const getProcessInfo = (processId: string | undefined) => {
+    switch (processId) {
+      case 'extract-all':
+        return {
+          title: 'Extracting Colors for All Products',
+          steps: [
+            '📡 Connecting to Shopify API',
+            '📥 Fetching all products from your store',
+            '🔍 Analyzing which products have images',
+            '🎨 For each product:',
+            '   • Downloading product image',
+            '   • Extracting dominant color',
+            '   • Generating complementary color',
+            '   • Calculating text color with proper contrast',
+            '   • Updating product metafields'
+          ],
+          estimate: 'This typically takes 30-60 seconds per 100 products'
+        }
+      case 'extract-missing':
+        return {
+          title: 'Updating Products with Missing Colors',
+          steps: [
+            '📡 Connecting to Shopify API',
+            '📥 Fetching all products',
+            '🔍 Identifying products missing color data',
+            '🎨 Processing only products that need updates',
+            '💾 Saving color metafields'
+          ],
+          estimate: 'This is usually faster as it only processes products that need updates'
+        }
+      case 'contrast-report':
+        return {
+          title: 'Generating Color Contrast Report',
+          steps: [
+            '📡 Connecting to Shopify API',
+            '📥 Fetching all products with color data',
+            '📊 Calculating contrast ratios',
+            '✅ Checking WCAG compliance',
+            '📝 Generating detailed report'
+          ],
+          estimate: 'This typically takes 10-30 seconds'
+        }
+      case 'recommendations':
+        return {
+          title: 'Generating AI Product Recommendations',
+          steps: [
+            '📡 Connecting to Shopify API',
+            '📥 Fetching all products',
+            '🤖 Generating embeddings with OpenAI',
+            '🔍 Finding similar products',
+            '✨ Creating personalized recommendations',
+            '💾 Saving recommendations to metafields'
+          ],
+          estimate: 'This can take 2-5 minutes depending on product count'
+        }
+      default:
+        return {
+          title: 'Processing',
+          steps: ['Working on your request...'],
+          estimate: 'This may take a few moments'
+        }
+    }
+  }
+
   // Show real-time logs during processing
   if (isProcessing || (!results && logs.length > 0)) {
+    const processInfo = getProcessInfo(activeProcessId)
+    
     return (
       <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
         <div className="space-y-4">
           {isProcessing && (
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <p className="text-gray-700 font-medium">Processing...</p>
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <div>
+                    <p className="text-gray-800 font-semibold text-lg">{processInfo.title}</p>
+                    <p className="text-gray-600 text-sm">{processInfo.estimate}</p>
+                  </div>
+                </div>
+                {onStop && (
+                  <button
+                    onClick={onStop}
+                    className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                  >
+                    Stop Process
+                  </button>
+                )}
               </div>
-              {onStop && (
-                <button
-                  onClick={onStop}
-                  className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                >
-                  Stop Process
-                </button>
-              )}
-            </div>
+              
+              {/* Show what's happening */}
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <h4 className="font-semibold text-blue-900 mb-3">What's happening:</h4>
+                <div className="space-y-2">
+                  {processInfo.steps.map((step, index) => (
+                    <div key={index} className="flex items-start space-x-2">
+                      <span className="text-blue-600 mt-0.5">
+                        {step.startsWith('   ') ? '  ▸' : '•'}
+                      </span>
+                      <span className="text-sm text-blue-800">{step.replace('   ', '')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Progress animation */}
+              <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Please wait while we process your request. You'll see detailed results when complete.
+                  </p>
+                </div>
+              </div>
+            </>
           )}
           
           {logs.length > 0 && (
