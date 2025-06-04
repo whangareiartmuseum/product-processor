@@ -1,12 +1,15 @@
 {
   "name": "product-processor",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Web-based Shopify product processor for colors, recommendations, and metadata management",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup": "npm install && pip3 install -r requirements.txt",
+    "setup:python": "pip3 install -r requirements.txt"
   },
   "dependencies": {
     "react": "^19.0.0",
