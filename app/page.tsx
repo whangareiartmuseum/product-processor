@@ -9,27 +9,30 @@ export default function Home() {
   const [results, setResults] = useState<any>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
+  // Check if we're on Vercel
+  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+
   const processes = [
     {
       id: 'extract-all',
       title: 'Extract Colors - All Products',
       description: 'Extract and update colors for all products in your store',
       icon: '🎨',
-      endpoint: '/api/colors/extract-all'
+      endpoint: isVercel ? '/api/colors-all' : '/api/colors/extract-all'
     },
     {
       id: 'extract-missing',
       title: 'Extract Colors - Missing Only',
       description: 'Update products that are missing color metadata',
       icon: '🔍',
-      endpoint: '/api/colors/extract-missing'
+      endpoint: isVercel ? '/api/colors-missing' : '/api/colors/extract-missing'
     },
     {
       id: 'extract-single',
       title: 'Process Single Product',
       description: 'Extract colors from a specific product',
       icon: '📦',
-      endpoint: '/api/colors/extract-single',
+      endpoint: isVercel ? '/api/colors-single' : '/api/colors/extract-single',
       requiresInput: true
     },
     {
@@ -37,21 +40,21 @@ export default function Home() {
       title: 'Color Contrast Report',
       description: 'Generate a report of color contrast issues',
       icon: '📊',
-      endpoint: '/api/colors/contrast-report'
+      endpoint: isVercel ? '/api/colors-report' : '/api/colors/contrast-report'
     },
     {
       id: 'recommendations',
       title: 'Product Recommendations',
       description: 'Generate AI-powered product recommendations',
       icon: '🤖',
-      endpoint: '/api/recommendations/generate'
+      endpoint: isVercel ? '/api/recommendations' : '/api/recommendations/generate'
     },
     {
       id: 'inspect-metafields',
       title: 'Inspect Metafields',
       description: 'View color metafields for the first 10 products',
       icon: '🔎',
-      endpoint: '/api/metafields/inspect'
+      endpoint: isVercel ? '/api/metafields-inspect' : '/api/metafields/inspect'
     },
     {
       id: 'clear-metafields',
@@ -109,6 +112,11 @@ export default function Home() {
           <p className="text-xl text-gray-600">
             Manage colors, recommendations, and metadata for your Shopify products
           </p>
+          {isVercel && (
+            <p className="text-sm text-blue-600 mt-2">
+              Running on Vercel with Python Serverless Functions
+            </p>
+          )}
         </header>
 
         <div className="grid lg:grid-cols-2 gap-8">
