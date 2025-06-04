@@ -11,12 +11,12 @@ class handler(BaseHTTPRequestHandler):
             os.environ['SHOPIFY_SHOP_URL'] = os.getenv('SHOPIFY_SHOP_URL', '')
             os.environ['SHOPIFY_ACCESS_TOKEN'] = os.getenv('SHOPIFY_ACCESS_TOKEN', '')
             
-            # Path to the script
-            script_path = os.path.join(os.path.dirname(__file__), '../../python_scripts/process_all_colors.py')
+            # Path to the script - fixed to use correct relative path
+            script_path = os.path.join(os.path.dirname(__file__), '../python_scripts/process_all_colors.py')
             
-            # Run the script with --all flag
+            # Run the script with --update-all flag
             result = subprocess.run(
-                [sys.executable, script_path, '--all'],
+                [sys.executable, script_path, '--update-all'],
                 capture_output=True,
                 text=True,
                 env=os.environ
@@ -58,7 +58,7 @@ class handler(BaseHTTPRequestHandler):
             response_data = {
                 'success': False,
                 'error': str(e),
-                'logs': ['Failed to run color extraction']
+                'logs': ['Failed to run color extraction for all products']
             }
             
             self.wfile.write(json.dumps(response_data).encode())

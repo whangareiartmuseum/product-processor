@@ -31,8 +31,8 @@ class handler(BaseHTTPRequestHandler):
             os.environ['SHOPIFY_SHOP_URL'] = os.getenv('SHOPIFY_SHOP_URL', '')
             os.environ['SHOPIFY_ACCESS_TOKEN'] = os.getenv('SHOPIFY_ACCESS_TOKEN', '')
             
-            # Path to the script
-            script_path = os.path.join(os.path.dirname(__file__), '../../python_scripts/process_single_product.py')
+            # Path to the script - fixed to use correct relative path
+            script_path = os.path.join(os.path.dirname(__file__), '../python_scripts/process_single_product.py')
             
             # Run the script with product input
             result = subprocess.run(
