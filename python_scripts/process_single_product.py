@@ -11,15 +11,24 @@ from PIL import Image
 from io import BytesIO
 from color_extractor_fixed import get_dominant_color, get_complementary_color, generate_text_color_from_dominant, get_contrast_ratio
 
-# Shopify API Configuration from environment
-SHOP_URL = os.getenv('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
-ACCESS_TOKEN = os.getenv('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
-GRAPHQL_URL = f"https://{SHOP_URL}/admin/api/2024-01/graphql.json"
+# Get Shopify API Configuration
+def get_shopify_config():
+    """Get Shopify configuration from environment variables."""
+    shop_url = os.getenv('SHOPIFY_SHOP_URL')
+    access_token = os.getenv('SHOPIFY_ACCESS_TOKEN')
+    
+    if not shop_url or not access_token:
+        raise ValueError("Missing required environment variables: SHOPIFY_SHOP_URL and/or SHOPIFY_ACCESS_TOKEN")
+    
+    graphql_url = f"https://{shop_url}/admin/api/2024-01/graphql.json"
+    return shop_url, access_token, graphql_url
 
 def get_product_by_id(product_id):
     """Get a single product by ID."""
+    shop_url, access_token, graphql_url = get_shopify_config()
+    
     headers = {
-        'X-Shopify-Access-Token': ACCESS_TOKEN,
+        'X-Shopify-Access-Token': access_token,
         'Content-Type': 'application/json'
     }
     
@@ -60,7 +69,7 @@ def get_product_by_id(product_id):
     variables = {"id": product_id}
     payload = {"query": query, "variables": variables}
     
-    response = requests.post(GRAPHQL_URL, headers=headers, json=payload)
+    response = requests.post(graphql_url, headers=headers, json=payload)
     
     if response.status_code != 200:
         print(f"❌ Failed to fetch product: HTTP {response.status_code}")
@@ -86,8 +95,10 @@ def download_image(url):
 
 def update_product_colors(product_id, dominant_color, complementary_color, text_color):
     """Update the color metafields for a product."""
+    shop_url, access_token, graphql_url = get_shopify_config()
+    
     headers = {
-        'X-Shopify-Access-Token': ACCESS_TOKEN,
+        'X-Shopify-Access-Token': access_token,
         'Content-Type': 'application/json'
     }
     
@@ -146,7 +157,7 @@ def update_product_colors(product_id, dominant_color, complementary_color, text_
     
     payload = {"query": mutation, "variables": variables}
     
-    response = requests.post(GRAPHQL_URL, headers=headers, json=payload)
+    response = requests.post(graphql_url, headers=headers, json=payload)
     
     if response.status_code != 200:
         print(f"❌ Failed to update metafields: HTTP {response.status_code}")

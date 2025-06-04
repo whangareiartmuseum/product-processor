@@ -20,8 +20,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Shopify API Configuration from environment variables
-SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
+SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL')
 ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', '')
+if not SHOP_URL:
+    logger.error("SHOPIFY_SHOP_URL environment variable is not set")
+    raise ValueError("SHOPIFY_SHOP_URL is required")
+if not ACCESS_TOKEN:
+    logger.error("SHOPIFY_ACCESS_TOKEN environment variable is not set")
+    raise ValueError("SHOPIFY_ACCESS_TOKEN is required")
 GRAPHQL_URL = f"https://{SHOP_URL}/admin/api/2024-01/graphql.json"
 
 # OpenAI Configuration from environment variable

@@ -8,9 +8,14 @@ from contextlib import redirect_stdout, redirect_stderr
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
-            # Set environment variables
-            os.environ['SHOPIFY_SHOP_URL'] = os.getenv('SHOPIFY_SHOP_URL', '')
-            os.environ['SHOPIFY_ACCESS_TOKEN'] = os.getenv('SHOPIFY_ACCESS_TOKEN', '')
+            # Set environment variables only if they exist
+            shop_url = os.getenv('SHOPIFY_SHOP_URL')
+            access_token = os.getenv('SHOPIFY_ACCESS_TOKEN')
+            
+            if shop_url:
+                os.environ['SHOPIFY_SHOP_URL'] = shop_url
+            if access_token:
+                os.environ['SHOPIFY_ACCESS_TOKEN'] = access_token
             
             # Add python_scripts to path
             script_dir = os.path.join(os.path.dirname(__file__), '../python_scripts')

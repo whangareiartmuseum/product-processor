@@ -7,8 +7,12 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             # Get environment variables
-            SHOP_URL = os.getenv('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
-            ACCESS_TOKEN = os.getenv('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
+            SHOP_URL = os.getenv('SHOPIFY_SHOP_URL')
+            ACCESS_TOKEN = os.getenv('SHOPIFY_ACCESS_TOKEN')
+            
+            if not SHOP_URL or not ACCESS_TOKEN:
+                raise ValueError("Missing required environment variables: SHOPIFY_SHOP_URL and/or SHOPIFY_ACCESS_TOKEN")
+            
             GRAPHQL_URL = f"https://{SHOP_URL}/admin/api/2024-01/graphql.json"
             
             headers = {
