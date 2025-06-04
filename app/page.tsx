@@ -4,6 +4,17 @@ import { useState, useRef } from 'react'
 import { ProcessPanel } from '@/components/ProcessPanel'
 import { ResultsPanel } from '@/components/ResultsPanel'
 
+// Define the Process type here to match the one in ProcessPanel
+interface Process {
+  id: string
+  title: string
+  description: string
+  icon: string
+  endpoint: string
+  requiresInput?: boolean
+  streaming?: boolean
+}
+
 export default function Home() {
   const [activeProcess, setActiveProcess] = useState<string | null>(null)
   const [results, setResults] = useState<any>(null)
@@ -14,7 +25,7 @@ export default function Home() {
   // Check if we're on Vercel
   const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
 
-  const processes = [
+  const processes: Process[] = [
     {
       id: 'extract-all',
       title: 'Extract Colors - All Products',
@@ -78,13 +89,13 @@ export default function Home() {
   ]
 
   const runProcess = async (endpoint: string, params: any) => {
+    // Find the process to check if it supports streaming
+    const process = processes.find(p => p.endpoint === endpoint)
+    
     try {
       setIsProcessing(true)
       setResults(null)
       setLogs([])
-
-      // Find the process to check if it supports streaming
-      const process = processes.find(p => p.endpoint === endpoint)
       
       if (process?.streaming && !isVercel) {
         // Use SSE for streaming progress (for local development with custom backend)
