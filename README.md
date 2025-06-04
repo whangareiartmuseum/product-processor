@@ -1,28 +1,24 @@
 # Product Processor
 
-A powerful web-based tool for managing Shopify product colors, recommendations, and metadata. Built with Next.js and deployed on Vercel.
+A powerful web-based tool for managing Shopify product colors, recommendations, and metadata. Built with Next.js and Python.
 
-## ⚠️ Important: Python Runtime on Vercel
+## ⚠️ Important: Deployment Platform Choice
 
-**Current Limitation**: The Python scripts cannot run directly on Vercel's serverless platform as spawned processes. This affects all processing features.
+**Vercel has discontinued Python support**. While the UI will work beautifully on Vercel, the Python processing features will not function.
 
-### Solutions:
+### 🚀 Recommended Deployment: Railway
 
-1. **Local Development** (Immediate Solution)
-   - Run the app locally with `npm run dev`
-   - Ensure Python 3 and all dependencies are installed
-   - All features will work perfectly
+For full functionality, deploy to [Railway](https://railway.app):
+- Supports both Node.js and Python
+- One-click deploy from GitHub
+- Free tier available
+- See `DEPLOYMENT_RAILWAY.md` for instructions
 
-2. **Production Deployment Options**:
-   - **Option A**: Deploy the UI on Vercel, run Python scripts on a separate server (AWS Lambda, Google Cloud Functions, etc.)
-   - **Option B**: Use a platform that supports both Node.js and Python (Heroku, Railway, Render)
-   - **Option C**: Convert Python scripts to TypeScript (significant effort required)
-   - **Option D**: Use Docker on platforms like Google Cloud Run or AWS ECS
-
-3. **Recommended Approach for Production**:
-   - Keep the beautiful UI on Vercel
-   - Deploy Python scripts as separate microservices
-   - Update the API routes to call these external services
+### Alternative Options:
+- **Local Development**: Run with `npm run dev` for full functionality
+- **Render.com**: Supports Docker deployments
+- **Heroku**: Classic platform with Python buildpack
+- **Google Cloud Run**: For containerized deployments
 
 ## Features
 
