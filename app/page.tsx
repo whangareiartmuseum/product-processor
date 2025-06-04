@@ -72,33 +72,6 @@ export default function Home() {
     }
   ]
 
-  // Add test endpoints when on Vercel
-  const testProcesses = isVercel ? [
-    {
-      id: 'test-hello',
-      title: '🧪 Test: Hello Python',
-      description: 'Test basic Python functionality (no dependencies)',
-      icon: '👋',
-      endpoint: '/api/hello'
-    },
-    {
-      id: 'test-env',
-      title: '🧪 Test: Python Environment',
-      description: 'Check Python version and environment details',
-      icon: '🔧',
-      endpoint: '/api/test'
-    },
-    {
-      id: 'test-import',
-      title: '🧪 Test: Import Modules',
-      description: 'Test if Python can import required modules',
-      icon: '📦',
-      endpoint: '/api/test-import'
-    }
-  ] : []
-
-  const allProcesses = [...processes, ...testProcesses]
-
   const runProcess = async (endpoint: string, params: any) => {
     try {
       setIsProcessing(true)
@@ -140,8 +113,8 @@ export default function Home() {
             Manage colors, recommendations, and metadata for your Shopify products
           </p>
           {isVercel && (
-            <p className="text-sm text-blue-600 mt-2">
-              Running on Vercel with Python Serverless Functions
+            <p className="text-sm text-green-600 mt-2">
+              ✅ Running on Vercel with Python Serverless Functions
             </p>
           )}
         </header>
@@ -151,14 +124,14 @@ export default function Home() {
             <h2 className="text-2xl font-semibold text-gray-700 mb-4">
               Available Processes
             </h2>
-            {allProcesses.map((process) => (
+            {processes.map((process) => (
               <ProcessPanel
                 key={process.id}
                 process={process}
                 isActive={activeProcess === process.id}
                 onSelect={() => setActiveProcess(process.id)}
                 onRun={(params: any) => {
-                  const currentProcess = allProcesses.find(p => p.id === activeProcess)
+                  const currentProcess = processes.find(p => p.id === activeProcess)
                   if (currentProcess) {
                     runProcess(currentProcess.endpoint, params)
                   }
