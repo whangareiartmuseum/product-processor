@@ -48,7 +48,7 @@ Fixed EOF errors when Python scripts tried to read input in serverless environme
 All features are now operational:
 - ✅ Extract Colors - All Products
 - ✅ Extract Colors - Missing Only
-- ✅ Process Single Product
+- ✅ Extract Colors - Single Product
 - ✅ Color Contrast Report
 - ✅ Product Recommendations (AI)
 - ✅ Inspect Metafields

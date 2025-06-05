@@ -21,7 +21,7 @@ Your app is deployed on Vercel with full Python support for serverless functions
 ### 🎨 Color Processing
 - **Extract All Colors**: Process color extraction for all products in your store
 - **Extract Missing Only**: Update only products missing color metadata
-- **Single Product**: Extract colors from a specific product by ID or handle
+- **Extract Colors - Single Product**: Extract colors from a specific product by ID or handle
 - **Contrast Reports**: Generate detailed color contrast analysis reports
 
 ### 🤖 AI-Powered Recommendations

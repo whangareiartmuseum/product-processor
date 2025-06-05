@@ -44,7 +44,7 @@ export default function Home() {
     },
     {
       id: 'extract-single',
-      title: 'Process Single Product',
+      title: 'Extract Colors - Single Product',
       description: 'Extract colors from a specific product',
       icon: '📦',
       endpoint: isVercel ? '/api/colors-single' : '/api/colors/extract-single',

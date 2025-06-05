@@ -41,7 +41,7 @@ The report identified 48 products with poor contrast (<4.5:1). Some examples:
 
 For products with failing contrast ratios:
 
-1. **Run "Process Single Product"** to regenerate colors with better contrast
+1. **Run "Extract Colors - Single Product"** to regenerate colors with better contrast
 2. **Use the "Update Poor Contrast" script** (if available) to batch update failing products
 3. **Manually adjust colors** in Shopify admin if needed
 

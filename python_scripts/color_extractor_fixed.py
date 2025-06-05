@@ -178,22 +178,51 @@ def get_complementary_color(hex_color, min_contrast=3.0):
     rgb = hex_to_rgb(hex_color)
     h, s, v = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
     
+    # Detect if input color is grey/desaturated
+    is_grey = s < 0.2  # Less than 20% saturation is considered grey
+    
     # Get complementary hue (opposite on color wheel)
     h_comp = (h + 0.5) % 1.0
     
-    # Adjust saturation and value for good contrast
-    # If original is light, make complementary darker
-    if v > 0.7:
-        v_comp = v * 0.3
-        s_comp = min(1.0, s * 1.2)
-    # If original is dark, make complementary lighter
-    elif v < 0.3:
-        v_comp = 0.9
-        s_comp = s * 0.8
-    # If original is mid-tone, invert the value
+    # For grey inputs, pick a vibrant color instead of grey complementary
+    if is_grey:
+        # Use the value to determine which vibrant color to use
+        # This creates consistency for similar greys
+        color_index = int((v * 1000 + sum(rgb)) % 6)
+        vibrant_colors = [
+            (0.0, 0.8, 0.7),    # Red
+            (0.083, 0.8, 0.7),  # Orange  
+            (0.167, 0.8, 0.7),  # Yellow
+            (0.333, 0.8, 0.6),  # Green
+            (0.583, 0.8, 0.6),  # Blue
+            (0.75, 0.8, 0.6),   # Purple
+        ]
+        h_comp, s_comp, v_comp = vibrant_colors[color_index]
+        
+        # Adjust value for contrast
+        if v > 0.5:
+            v_comp = v_comp * 0.4  # Make darker if original is light
+        else:
+            v_comp = min(0.9, v_comp * 1.3)  # Make lighter if original is dark
     else:
-        v_comp = 1.0 - v
-        s_comp = s
+        # For colored inputs, enhance saturation for complementary
+        # Adjust saturation and value for good contrast
+        # If original is light, make complementary darker and more saturated
+        if v > 0.7:
+            v_comp = v * 0.3
+            s_comp = min(1.0, s * 1.5 + 0.3)  # Boost saturation significantly
+        # If original is dark, make complementary lighter and vibrant
+        elif v < 0.3:
+            v_comp = 0.85
+            s_comp = min(1.0, s * 1.2 + 0.2)  # Boost saturation
+        # If original is mid-tone, invert the value and boost saturation
+        else:
+            v_comp = 1.0 - v
+            s_comp = min(1.0, s * 1.3 + 0.2)  # Boost saturation
+    
+    # Ensure minimum saturation for non-grey inputs
+    if not is_grey and s_comp < 0.3:
+        s_comp = 0.3
     
     # Convert back to RGB
     r, g, b = colorsys.hsv_to_rgb(h_comp, s_comp, v_comp)
@@ -236,9 +265,14 @@ def get_complementary_color(hex_color, min_contrast=3.0):
         if orig_lum > 0.5:
             # Original is light, use very dark complementary
             v_comp = 0.1
+            # But keep some saturation unless input was grey
+            if not is_grey:
+                s_comp = max(0.3, s_comp)
         else:
             # Original is dark, use very light complementary
             v_comp = 0.9
+            # Reduce saturation for light colors to avoid neon effects
+            s_comp = min(0.5, s_comp)
         
         r, g, b = colorsys.hsv_to_rgb(h_comp, s_comp, v_comp)
         rgb_comp = (int(r * 255), int(g * 255), int(b * 255))
