@@ -1,6 +1,6 @@
 # Product Processor
 
-A powerful web-based tool for managing Shopify product colors, recommendations, and metadata. Built with Next.js and Python.
+A powerful web-based tool for managing Shopify product colors and recommendations. Built with Next.js and Python.
 
 ## 🚀 Deployment Status
 
@@ -29,11 +29,6 @@ Your app is deployed on Vercel with full Python support for serverless functions
 - Automatically excludes out-of-stock products
 - Creates meaningful connections between related products
 - Uses friendly, accessible language for all recommendations
-
-### 🔍 Metadata Management
-- Inspect color metafields for products
-- Clear unwanted metafields
-- Clean up and delete unnecessary metadata
 
 ## 🎨 Features
 
@@ -123,9 +118,6 @@ All endpoints accept POST requests:
 - `/api/colors/extract-single` - Extract colors for a single product
 - `/api/colors/contrast-report` - Generate contrast report
 - `/api/recommendations/generate` - Generate product recommendations
-- `/api/metafields/inspect` - Inspect product metafields
-- `/api/metafields/clear` - Clear metafields
-- `/api/metafields/cleanup` - Delete metafields
 
 ## Project Structure
 
@@ -157,12 +149,6 @@ The recommendation system:
 - Filters out out-of-stock products
 - Generates friendly, accessible explanations
 - Processes products in batches for efficiency
-
-### Metadata Management
-Helps maintain clean product data by:
-- Viewing current metafields
-- Clearing specific unwanted fields
-- Bulk deletion of unnecessary metadata
 
 ## Troubleshooting
 

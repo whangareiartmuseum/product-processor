@@ -64,27 +64,6 @@ export default function Home() {
       icon: '🤖',
       endpoint: isVercel ? '/api/recommendations' : '/api/recommendations/generate',
       streaming: true
-    },
-    {
-      id: 'inspect-metafields',
-      title: 'Inspect Metafields',
-      description: 'View color metafields for the first 10 products',
-      icon: '🔎',
-      endpoint: isVercel ? '/api/metafields-inspect' : '/api/metafields/inspect'
-    },
-    {
-      id: 'clear-metafields',
-      title: 'Clear Metafields',
-      description: 'Clear unwanted metafields from products',
-      icon: '🧹',
-      endpoint: '/api/metafields/clear'
-    },
-    {
-      id: 'cleanup-metafields',
-      title: 'Delete Metafields',
-      description: 'Permanently delete unwanted metafields',
-      icon: '🗑️',
-      endpoint: '/api/metafields/cleanup'
     }
   ]
 
