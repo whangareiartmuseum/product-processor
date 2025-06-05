@@ -158,16 +158,11 @@ export default function Home() {
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-800 mb-4">
-            Product Processor
+            WAM Product Processor
           </h1>
           <p className="text-xl text-gray-600">
-            Manage colors, recommendations, and metadata for your Shopify products
+            Manage colors, recommendations, and metadata for Whangārei Art Museum's Shopify products
           </p>
-          {isVercel && (
-            <p className="text-sm text-green-600 mt-2">
-              ✅ Running on Vercel with Python Serverless Functions
-            </p>
-          )}
         </header>
 
         <div className="grid lg:grid-cols-2 gap-8">

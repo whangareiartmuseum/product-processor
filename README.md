@@ -1,6 +1,6 @@
-# Product Processor
+# Product Processor for Whangārei Art Museum
 
-A powerful web-based tool for managing Shopify product colors and recommendations. Built with Next.js and Python.
+A powerful web-based tool for managing Shopify product colors and recommendations for Whangārei Art Museum. Built with Next.js and Python.
 
 ## 🚀 Deployment Status
 
