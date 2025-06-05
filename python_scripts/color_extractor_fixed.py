@@ -41,7 +41,8 @@ def get_dominant_color(image, num_colors=5, resize_width=150):
         if all(channel < 10 for channel in pixel):
             continue
         # Skip near-gray pixels that are too light
-        if max(pixel) - min(pixel) < 10 and sum(pixel)/3 > 240:
+        # Convert to float to prevent overflow
+        if max(pixel) - min(pixel) < 10 and sum(float(p) for p in pixel)/3 > 240:
             continue
         filtered_pixels.append(tuple(pixel))
     
