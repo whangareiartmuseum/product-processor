@@ -3,7 +3,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 
 export async function POST() {
-  return new Promise((resolve) => {
+  return new Promise<NextResponse>((resolve) => {
     const scriptPath = path.join(process.cwd(), 'python_scripts', 'generate_instagram_post.py');
     const pythonProcess = spawn('python3', [scriptPath]);
 
