@@ -64,6 +64,20 @@ export default function Home() {
       icon: '🤖',
       endpoint: isVercel ? '/api/recommendations' : '/api/recommendations/generate',
       streaming: true
+    },
+    {
+      id: 'missing-descriptions',
+      title: 'Missing Descriptions Report',
+      description: 'Find all products that are missing descriptions',
+      icon: '📝',
+      endpoint: isVercel ? '/api/descriptions-report' : '/api/descriptions-report'
+    },
+    {
+      id: 'instagram-post',
+      title: 'Generate Instagram Post',
+      description: 'Create a daily Instagram post with product image and AI-generated caption',
+      icon: '📸',
+      endpoint: isVercel ? '/api/instagram-generate' : '/api/instagram/generate'
     }
   ]
 
@@ -197,6 +211,7 @@ export default function Home() {
               logs={logs}
               onStop={stopProcess}
               activeProcessId={activeProcess || undefined}
+              onRunProcess={runProcess}
             />
           </div>
         </div>

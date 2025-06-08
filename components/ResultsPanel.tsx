@@ -1,14 +1,17 @@
 'use client'
 
+import { InstagramPostDisplay } from './InstagramPostDisplay'
+
 interface ResultsPanelProps {
   results: any
   isProcessing: boolean
   logs?: string[]
   onStop?: () => void
   activeProcessId?: string
+  onRunProcess?: (endpoint: string, params: any) => void
 }
 
-export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeProcessId }: ResultsPanelProps) {
+export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeProcessId, onRunProcess }: ResultsPanelProps) {
   // Get process-specific information
   const getProcessInfo = (processId: string | undefined) => {
     switch (processId) {
@@ -64,6 +67,32 @@ export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeP
             '💾 Saving recommendations to metafields'
           ],
           estimate: 'This can take 2-5 minutes depending on product count'
+        }
+      case 'missing-descriptions':
+        return {
+          title: 'Generating Missing Descriptions Report',
+          steps: [
+            '📡 Connecting to Shopify API',
+            '📥 Fetching all products from your store',
+            '🔍 Checking each product for descriptions',
+            '📝 Identifying products with missing descriptions',
+            '📊 Generating summary statistics',
+            '📋 Creating detailed report'
+          ],
+          estimate: 'This typically takes 15-30 seconds for all products'
+        }
+      case 'instagram-post':
+        return {
+          title: 'Generating Instagram Post',
+          steps: [
+            '📡 Connecting to Shopify API',
+            '🎲 Selecting random product with colors',
+            '🖼️ Creating Instagram-ready image',
+            '🤖 Generating AI caption with OpenAI',
+            '⏰ Setting post schedule',
+            '✨ Preparing preview'
+          ],
+          estimate: 'This typically takes 20-30 seconds'
         }
       default:
         return {
@@ -189,6 +218,43 @@ export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeP
     )
   }
 
+  // Handle Instagram post regeneration
+  const handleInstagramRegenerate = () => {
+    if (onRunProcess) {
+      const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+      const endpoint = isVercel ? '/api/instagram-generate' : '/api/instagram/generate'
+      onRunProcess(endpoint, {})
+    }
+  }
+
+  // Handle marking Instagram post as posted
+  const handleMarkPosted = async (productId: string) => {
+    try {
+      await fetch('/api/instagram/mark-posted', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId })
+      })
+    } catch (error) {
+      console.error('Failed to mark as posted:', error)
+    }
+  }
+
+  // Special handling for Instagram posts
+  if (results.success && results.image_data && results.caption && activeProcessId === 'instagram-post') {
+    return (
+      <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+        <InstagramPostDisplay
+          postData={results}
+          onRegenerate={handleInstagramRegenerate}
+          onMarkPosted={handleMarkPosted}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-lg border-2 border-gray-200 p-6 max-h-[600px] overflow-y-auto">
       <div className="space-y-4">
@@ -211,6 +277,41 @@ export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeP
             <pre className="text-sm text-blue-800 whitespace-pre-wrap">
               {JSON.stringify(results.summary, null, 2)}
             </pre>
+          </div>
+        )}
+        
+        {/* Special handling for missing descriptions report */}
+        {results.products_missing_descriptions && (
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+            <h4 className="font-semibold text-amber-900 mb-3">Products Missing Descriptions ({results.products_missing_descriptions.length})</h4>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {results.products_missing_descriptions.slice(0, 20).map((product: any, index: number) => (
+                <div key={product.id} className="bg-white border border-amber-300 rounded p-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-gray-900">{index + 1}. {product.title}</p>
+                      <div className="text-sm text-gray-600 mt-1">
+                        <span>ID: {product.id}</span>
+                        {product.handle && <span className="ml-3">Handle: {product.handle}</span>}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {product.product_type && <span>Type: {product.product_type}</span>}
+                        {product.vendor && <span className="ml-3">Vendor: {product.vendor}</span>}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 text-right">
+                      {product.created_at && <div>Created: {new Date(product.created_at).toLocaleDateString()}</div>}
+                      {product.total_inventory !== undefined && <div>Stock: {product.total_inventory}</div>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {results.products_missing_descriptions.length > 20 && (
+                <p className="text-sm text-amber-700 italic text-center py-2">
+                  ... and {results.products_missing_descriptions.length - 20} more products
+                </p>
+              )}
+            </div>
           </div>
         )}
         
