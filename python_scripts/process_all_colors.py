@@ -28,7 +28,7 @@ def get_all_products_with_colors(cursor=None, products=None):
         
     # Get config values
     shop_url, access_token, graphql_url = get_shopify_config()
-    
+        
     headers = {
         'X-Shopify-Access-Token': access_token,
         'Content-Type': 'application/json'
@@ -732,22 +732,22 @@ def generate_contrast_report():
                 report_filename = f"/tmp/color_contrast_report_{time.strftime('%Y%m%d_%H%M%S')}.txt"
             else:
                 # Use current directory for local development
-                report_filename = f"color_contrast_report_{time.strftime('%Y%m%d_%H%M%S')}.txt"
+        report_filename = f"color_contrast_report_{time.strftime('%Y%m%d_%H%M%S')}.txt"
             
-            with open(report_filename, 'w') as f:
-                f.write("COLOR CONTRAST REPORT\n")
-                f.write("=" * 80 + "\n")
-                f.write(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write(f"Total products analyzed: {len(report_data)}\n")
-                f.write("\n")
-                f.write("Product Title | Contrast Ratio | WCAG | Dominant | Complementary | Text\n")
-                f.write("-" * 80 + "\n")
-                
-                for item in report_data:
-                    f.write(f"{item['title'][:30]:<30} | {item['contrast_ratio']:>6.2f}:1 | {item['compliance']:<4} | ")
-                    f.write(f"{item['dominant']} | {item['complementary']} | {item['text']}\n")
+        with open(report_filename, 'w') as f:
+            f.write("COLOR CONTRAST REPORT\n")
+            f.write("=" * 80 + "\n")
+            f.write(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Total products analyzed: {len(report_data)}\n")
+            f.write("\n")
+            f.write("Product Title | Contrast Ratio | WCAG | Dominant | Complementary | Text\n")
+            f.write("-" * 80 + "\n")
             
-            print(f"\n💾 Detailed report saved to: {report_filename}")
+            for item in report_data:
+                f.write(f"{item['title'][:30]:<30} | {item['contrast_ratio']:>6.2f}:1 | {item['compliance']:<4} | ")
+                f.write(f"{item['dominant']} | {item['complementary']} | {item['text']}\n")
+        
+        print(f"\n💾 Detailed report saved to: {report_filename}")
         except Exception as e:
             # If file saving fails, just skip it (not critical for the report)
             print(f"\n📝 Note: Could not save report file (running in read-only environment)")

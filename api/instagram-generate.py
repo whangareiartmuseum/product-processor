@@ -160,7 +160,9 @@ class handler(BaseHTTPRequestHandler):
     
     def generate_summary(self, product, client):
         """Generate a 300-word Instagram caption from product description"""
+        title = product.get('title', '')
         description = product.get('body_html', '')
+        vendor = product.get('vendor', '')
         
         # Handle None or empty description
         if description is None:
@@ -170,63 +172,53 @@ class handler(BaseHTTPRequestHandler):
         import re
         clean_desc = re.sub('<.*?>', '', str(description))
         
-        # If no OpenAI client or no description, return a default caption
+        # Format the header
+        header = f"{title}"
+        if vendor:
+            header = f"{title} ⬤ {vendor}"
+        
+        # If no OpenAI client or no description, return just the header and description
         if not client or not clean_desc.strip():
-            title = product['title']
-            return f"""Discover the beauty of {title} at Whangārei Art Museum! 
-
-This unique piece from our collection represents the rich artistic heritage of our region. Each item in our museum store has been carefully selected to bring a piece of our cultural experience into your everyday life.
-
-Whether you're a collector, art enthusiast, or looking for that perfect gift, this item offers a tangible connection to the creative spirit that defines our museum. The quality craftsmanship and attention to detail make it a treasured addition to any collection.
-
-Visit us at Whangārei Art Museum to explore our full range of products and immerse yourself in the vibrant arts scene of Northland. Our knowledgeable staff are always happy to share the stories behind each piece and help you find something that speaks to you.
-
-Supporting our museum store directly contributes to our exhibitions, educational programs, and community initiatives. Every purchase helps us continue our mission of making art accessible to all.
-
-#WhangāreiArtMuseum #MuseumStore #ArtLovers #NewZealandArt #Northland #CulturalHeritage #ArtCollector #MuseumGift #LocalArt #SupportTheArts #ArtisticExpression #MuseumLife #CreativeNZ #ArtCommunity"""
+            # Truncate or pad description to approximately 300 words
+            words = clean_desc.split()
+            if len(words) > 300:
+                clean_desc = ' '.join(words[:300])
+            return f"{header}\n\n{clean_desc}"
         
         # Generate with OpenAI
-        prompt = f"""Create an engaging Instagram caption for this product. The caption should be exactly 300 words.
+        prompt = f"""Take the following product description and rewrite it to be exactly 300 words. 
+Keep the content and tone exactly the same - only fix typos, grammar, and improve flow/structure.
+Do not editorialize or change the meaning. Do not add hashtags or emojis.
 
-Product: {product['title']}
-Description: {clean_desc[:500]}...
+Original description:
+{clean_desc}
 
-Guidelines:
-- Make it conversational and engaging
-- Include relevant hashtags at the end
-- Focus on the benefits and appeal of the product
-- Use a friendly, approachable tone
-- Make it suitable for Instagram's audience
-- Do not use emojis in the main text, only at the very end if appropriate
-
-Write exactly 300 words."""
+Rules:
+- Keep the same tone and content
+- Fix only typos and grammar
+- Improve flow and structure if needed
+- Make it exactly 300 words
+- Do not add any new information
+- Do not add hashtags or emojis
+- Do not change the meaning or add opinions"""
 
         try:
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
-                    {"role": "system", "content": "You are a social media content creator specializing in art and museum products."},
+                    {"role": "system", "content": "You are a copy editor. Your job is to fix grammar and adjust word count while keeping the original content and tone intact."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.7
+                temperature=0.3
             )
             
-            return response.choices[0].message.content
+            return f"{header}\n\n{response.choices[0].message.content}"
         except Exception as e:
-            # Fallback caption if API fails
-            return f"""Discover the beauty of {product['title']} at Whangārei Art Museum! 
-
-{clean_desc[:200]}...
-
-This unique piece from our collection represents the rich artistic heritage of our region. Each item in our museum store has been carefully selected to bring a piece of our cultural experience into your everyday life.
-
-Whether you're a collector, art enthusiast, or looking for that perfect gift, this item offers a tangible connection to the creative spirit that defines our museum. The quality craftsmanship and attention to detail make it a treasured addition to any collection.
-
-Visit us at Whangārei Art Museum to explore our full range of products and immerse yourself in the vibrant arts scene of Northland. Our knowledgeable staff are always happy to share the stories behind each piece and help you find something that speaks to you.
-
-Supporting our museum store directly contributes to our exhibitions, educational programs, and community initiatives. Every purchase helps us continue our mission of making art accessible to all.
-
-#WhangāreiArtMuseum #MuseumStore #ArtLovers #NewZealandArt #Northland #CulturalHeritage #ArtCollector #MuseumGift #LocalArt #SupportTheArts #ArtisticExpression #MuseumLife #CreativeNZ #ArtCommunity"""
+            # Fallback - just use the original description
+            words = clean_desc.split()
+            if len(words) > 300:
+                clean_desc = ' '.join(words[:300])
+            return f"{header}\n\n{clean_desc}"
     
     def do_OPTIONS(self):
         self.send_response(200)
