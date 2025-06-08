@@ -78,7 +78,7 @@ def get_random_product():
         
         if metafields_response.status_code == 200:
             metafields = metafields_response.json()['metafields']
-            has_complementary = any(mf['key'] == 'complementary_color' for mf in metafields)
+            has_complementary = any(mf['namespace'] == 'wam_color_manager' and mf['key'] == 'complementary_color' for mf in metafields)
             if has_complementary and product.get('images'):
                 available_products.append(product)
     
@@ -96,7 +96,8 @@ def get_random_product():
     metafields = {}
     if metafields_response.status_code == 200:
         for mf in metafields_response.json()['metafields']:
-            metafields[mf['key']] = mf['value']
+            if mf['namespace'] == 'wam_color_manager':
+                metafields[mf['key']] = mf['value']
     
     selected_product['metafields'] = metafields
     return selected_product

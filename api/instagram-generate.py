@@ -65,7 +65,7 @@ class handler(BaseHTTPRequestHandler):
                 complementary_color = None
                 
                 for metafield in metafields_response.json().get('metafields', []):
-                    if metafield.get('key') == 'complementary':
+                    if metafield.get('namespace') == 'wam_color_manager' and metafield.get('key') == 'complementary_color':
                         has_complementary_color = True
                         complementary_color = metafield.get('value')
                         break
