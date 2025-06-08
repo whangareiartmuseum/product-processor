@@ -25,73 +25,51 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    let output = ''
-    let errorOutput = ''
-    let report: any = null
+    let dataString = ''
+    let errorString = ''
 
     pythonProcess.stdout.on('data', (data) => {
-      const text = data.toString()
-      output += text
-      console.log(text)
-      
-      // Try to extract the report data from the output
-      const lines = output.split('\n')
-      for (const line of lines) {
-        if (line.includes('Report saved to:')) {
-          // Extract the filename and try to read it
-          const match = line.match(/Report saved to: (.+)/)
-          if (match) {
-            try {
-              // Since we can't read from /tmp in some environments, 
-              // we'll parse the summary from the console output
-              const summaryMatch = output.match(/Total products: (\d+)/);
-              const missingMatch = output.match(/Missing descriptions: (\d+) \(([\d.]+)%\)/);
-              const haveMatch = output.match(/Have descriptions: (\d+)/);
-              
-              if (summaryMatch && missingMatch) {
-                report = {
-                  success: true,
-                  summary: {
-                    total_products: parseInt(summaryMatch[1]),
-                    missing_descriptions: parseInt(missingMatch[1]),
-                    have_descriptions: parseInt(haveMatch?.[1] || '0'),
-                    missing_percentage: parseFloat(missingMatch[2])
-                  },
-                  logs: output.split('\n').filter(line => line.trim())
-                }
-              }
-            } catch (e) {
-              console.error('Error parsing report:', e)
-            }
-          }
-        }
-      }
+      dataString += data.toString()
     })
 
     pythonProcess.stderr.on('data', (data) => {
-      errorOutput += data.toString()
+      errorString += data.toString()
       console.error(data.toString())
     })
 
     pythonProcess.on('close', (code) => {
       if (code !== 0) {
+        console.error('Python script error:', errorString)
         resolve(NextResponse.json({
           success: false,
           error: 'Failed to generate missing descriptions report',
-          details: errorOutput || 'Unknown error occurred',
-          logs: output.split('\n').filter(line => line.trim())
+          details: errorString || 'Unknown error occurred'
         }, { status: 500 }))
-      } else {
-        if (report) {
-          resolve(NextResponse.json(report))
+        return
+      }
+
+      try {
+        const result = JSON.parse(dataString)
+        
+        if (result.error) {
+          resolve(NextResponse.json({
+            success: false,
+            error: result.error
+          }, { status: 500 }))
         } else {
-          // Fallback: return the logs if we couldn't parse the report
           resolve(NextResponse.json({
             success: true,
-            logs: output.split('\n').filter(line => line.trim()),
-            rawOutput: output
+            ...result
           }))
         }
+      } catch (error) {
+        console.error('Failed to parse Python output:', error)
+        console.error('Raw output:', dataString)
+        resolve(NextResponse.json({
+          success: false,
+          error: 'Failed to parse report data',
+          details: 'Invalid JSON output from Python script'
+        }, { status: 500 }))
       }
     })
 

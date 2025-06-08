@@ -1,46 +1,58 @@
-import sys
-import os
-import json
 from http.server import BaseHTTPRequestHandler
-
-# Add the parent directory to Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Import the report function
-from python_scripts.missing_descriptions_report import get_products_missing_descriptions
+import json
+import os
+import sys
+import subprocess
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
-            # Run the report generation
-            report = get_products_missing_descriptions()
+            # Run the missing descriptions report script
+            script_path = os.path.join(os.path.dirname(__file__), '..', 'python_scripts', 'missing_descriptions_report.py')
+            result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
             
-            # Send successful response
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
+            if result.returncode != 0:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': 'Failed to generate missing descriptions report',
+                    'details': result.stderr
+                }).encode())
+                return
             
-            # Include success flag
-            response = {
-                'success': True,
-                **report
-            }
-            
-            self.wfile.write(json.dumps(response).encode())
+            # Parse the JSON output
+            try:
+                report = json.loads(result.stdout)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    **report
+                }).encode())
+                
+            except json.JSONDecodeError:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': 'Failed to parse report data',
+                    'details': 'Invalid JSON output from script'
+                }).encode())
             
         except Exception as e:
-            # Send error response
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            
-            error_response = {
+            self.wfile.write(json.dumps({
                 'success': False,
                 'error': str(e)
-            }
-            
-            self.wfile.write(json.dumps(error_response).encode())
-    
+            }).encode())
+
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
