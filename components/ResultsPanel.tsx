@@ -255,6 +255,19 @@ export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeP
     )
   }
 
+  // Handle Instagram results
+  if (activeProcessId === 'instagram-post' && results.product_id) {
+    return (
+      <div className="bg-white rounded-lg border-2 border-gray-200 p-6 max-h-[600px] overflow-y-auto">
+        <InstagramPostDisplay 
+          postData={results}
+          onRegenerate={handleInstagramRegenerate}
+          onMarkPosted={handleMarkPosted}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-lg border-2 border-gray-200 p-6 max-h-[600px] overflow-y-auto">
       <div className="space-y-4">
