@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }, { status: 501 })
   }
 
-  return new Promise((resolve) => {
+  return new Promise<NextResponse>((resolve) => {
     const scriptPath = path.join(process.cwd(), 'python_scripts', 'missing_descriptions_report.py')
     
     const pythonProcess = spawn('python3', [scriptPath], {
