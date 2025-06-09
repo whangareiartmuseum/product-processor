@@ -132,7 +132,27 @@ export default function Home() {
           body: JSON.stringify(params)
         })
 
-        const data = await response.json()
+        // First check if we got a response
+        if (!response) {
+          throw new Error('No response received from server')
+        }
+
+        // Get the response text first to check what we're receiving
+        const responseText = await response.text()
+        
+        // Check if response is empty
+        if (!responseText) {
+          throw new Error('Empty response from server')
+        }
+
+        // Try to parse JSON
+        let data
+        try {
+          data = JSON.parse(responseText)
+        } catch (parseError) {
+          console.error('Failed to parse response:', responseText)
+          throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`)
+        }
 
         if (!response.ok) {
           throw new Error(data.error || 'Process failed')
