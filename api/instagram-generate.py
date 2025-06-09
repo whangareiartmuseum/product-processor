@@ -14,10 +14,19 @@ import tempfile
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
-            # Parse request body
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode('utf-8'))
+            # Parse request body with better error handling
+            content_length = self.headers.get('Content-Length')
+            if content_length:
+                post_data = self.rfile.read(int(content_length))
+                if post_data:
+                    try:
+                        data = json.loads(post_data.decode('utf-8'))
+                    except json.JSONDecodeError:
+                        data = {}
+                else:
+                    data = {}
+            else:
+                data = {}
             
             # Check if this is an actual post request
             should_post = data.get('post', False)
@@ -95,6 +104,7 @@ class handler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({
+                    'success': False,
                     'error': 'No eligible products found for Instagram post'
                 }).encode())
                 return
@@ -157,6 +167,7 @@ class handler(BaseHTTPRequestHandler):
             
             # Prepare response
             result = {
+                'success': True,
                 'product_id': product['id'],
                 'product_title': product['title'],
                 'image_data': image_data,
@@ -175,10 +186,15 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(result).encode())
             
         except Exception as e:
+            import traceback
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode())
+            self.wfile.write(json.dumps({
+                'success': False,
+                'error': str(e),
+                'traceback': traceback.format_exc()
+            }).encode())
     
     def get_posted_products(self):
         """Get list of product IDs that have already been posted"""
