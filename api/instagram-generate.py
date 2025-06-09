@@ -162,7 +162,31 @@ class handler(BaseHTTPRequestHandler):
         """Generate a 300-word Instagram caption from product description"""
         title = product.get('title', '')
         description = product.get('body_html', '')
-        vendor = product.get('vendor', '')
+        
+        # Get configuration from environment variables
+        SHOPIFY_SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
+        SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
+        
+        # Fetch author from metafields
+        headers = {
+            'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
+            'Content-Type': 'application/json'
+        }
+        
+        author = None
+        try:
+            metafields_response = requests.get(
+                f'https://{SHOPIFY_SHOP_URL}/admin/api/2024-01/products/{product["id"]}/metafields.json',
+                headers=headers
+            )
+            
+            for metafield in metafields_response.json().get('metafields', []):
+                if metafield.get('namespace') == 'app-ibp-book' and metafield.get('key') == 'authors':
+                    author = metafield.get('value')
+                    break
+        except:
+            # If fetching metafields fails, continue without author
+            pass
         
         # Handle None or empty description
         if description is None:
@@ -174,8 +198,8 @@ class handler(BaseHTTPRequestHandler):
         
         # Format the header
         header = f"{title}"
-        if vendor:
-            header = f"{title} ⬤ {vendor}"
+        if author:
+            header = f"{title} ⬤ {author}"
         
         # If no OpenAI client or no description, return just the header and description
         if not client or not clean_desc.strip():
