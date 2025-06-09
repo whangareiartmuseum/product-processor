@@ -2,14 +2,8 @@ from http.server import BaseHTTPRequestHandler
 import json
 import requests
 import os
-from PIL import Image, ImageDraw
-import io
-import base64
 from datetime import datetime, timedelta
 import random
-from openai import OpenAI
-from instagrapi import Client
-import tempfile
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -28,23 +22,9 @@ class handler(BaseHTTPRequestHandler):
             else:
                 data = {}
             
-            # Check if this is an actual post request
-            should_post = data.get('post', False)
-            
             # Get configuration from environment variables
             SHOPIFY_SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
             SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
-            OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'REDACTED_OPENAI_KEY')
-            
-            # Instagram credentials
-            INSTAGRAM_USERNAME = os.environ.get('INSTAGRAM_USERNAME', '')
-            INSTAGRAM_PASSWORD = os.environ.get('INSTAGRAM_PASSWORD', '')
-            
-            # Initialize OpenAI client only if API key is available
-            if OPENAI_API_KEY:
-                client = OpenAI(api_key=OPENAI_API_KEY)
-            else:
-                client = None
             
             # Fetch eligible products
             headers = {
@@ -103,67 +83,25 @@ class handler(BaseHTTPRequestHandler):
                 product = selected['product']
                 complementary_color = selected['complementary_color']
                 
-                # Create Instagram image
-                image_data, image_bytes = self.create_instagram_image(product, complementary_color)
-                
-                # Generate caption
-                caption = self.generate_summary(product, client)
-                
-                # Add shop link and hashtags to caption
-                shop_url = f"https://{SHOPIFY_SHOP_URL}/products/{product['handle']}"
-                full_caption = f"{caption}\n\n🛍️ Shop: {shop_url}\n\n#whangāreiartmuseum #nzart #artbooks #museumshop"
-                
-                # Post to Instagram if requested and credentials are available
-                posted = False
-                post_url = None
-                
-                if should_post and INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD:
-                    try:
-                        # Initialize Instagram client
-                        ig_client = Client()
-                        ig_client.login(INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD)
-                        
-                        # Save image to temporary file
-                        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
-                            # Convert image bytes to PIL Image
-                            img = Image.open(io.BytesIO(image_bytes))
-                            # Convert to RGB if necessary (Instagram doesn't support transparency)
-                            if img.mode != 'RGB':
-                                img = img.convert('RGB')
-                            img.save(tmp_file, 'JPEG', quality=95)
-                            tmp_path = tmp_file.name
-                        
-                        # Upload photo
-                        media = ig_client.photo_upload(tmp_path, full_caption)
-                        
-                        # Clean up temp file
-                        os.unlink(tmp_path)
-                        
-                        posted = True
-                        post_url = f"https://instagram.com/p/{media.code}"
-                        
-                    except Exception as e:
-                        # If posting fails, still return the generated content
-                        posted = False
-                        post_url = None
-                
                 # Calculate next post time (tomorrow at 10 AM)
                 tomorrow = datetime.now() + timedelta(days=1)
                 next_post_time = tomorrow.replace(hour=10, minute=0, second=0, microsecond=0)
                 
-                # Prepare response
+                # Prepare response WITHOUT image generation for now
                 response_data = {
                     'success': True,
                     'product_id': product['id'],
                     'product_title': product['title'],
-                    'image_data': image_data,
-                    'caption': caption,
-                    'full_caption': full_caption,
-                    'shop_url': shop_url,
+                    'image_data': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',  # 1x1 placeholder
+                    'caption': f"{product['title']}\n\nTesting Instagram functionality",
+                    'full_caption': f"{product['title']}\n\nTesting Instagram functionality\n\n🛍️ Shop: https://{SHOPIFY_SHOP_URL}/products/{product['handle']}",
+                    'shop_url': f"https://{SHOPIFY_SHOP_URL}/products/{product['handle']}",
                     'next_post_time': next_post_time.isoformat(),
                     'complementary_color': complementary_color,
-                    'posted': posted,
-                    'post_url': post_url
+                    'posted': False,
+                    'post_url': None,
+                    'test': True,
+                    'eligible_count': len(eligible_products)
                 }
             
             response_body = json.dumps(response_data)
@@ -179,9 +117,11 @@ class handler(BaseHTTPRequestHandler):
             
         except Exception as e:
             # Return error response
+            import traceback
             response_data = {
                 'success': False,
-                'error': str(e)
+                'error': str(e),
+                'traceback': traceback.format_exc()
             }
             
             response_body = json.dumps(response_data)
@@ -195,143 +135,11 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(response_body.encode('utf-8'))
             return
     
-    def create_instagram_image(self, product, complementary_color):
-        """Create Instagram square image with product on complementary color background"""
-        # Download product image
-        image_url = product['images'][0]['src']
-        response = requests.get(image_url)
-        product_img = Image.open(io.BytesIO(response.content))
-        
-        # Create square canvas with complementary color
-        size = 1080
-        background = Image.new('RGB', (size, size), complementary_color)
-        
-        # Resize product image to fit (80% of canvas)
-        product_img.thumbnail((int(size * 0.8), int(size * 0.8)), Image.Resampling.LANCZOS)
-        
-        # Center the product image
-        x = (size - product_img.width) // 2
-        y = (size - product_img.height) // 2
-        
-        # Handle transparency
-        if product_img.mode == 'RGBA':
-            background.paste(product_img, (x, y), product_img)
-        else:
-            background.paste(product_img, (x, y))
-        
-        # Convert to base64 for preview
-        buffer = io.BytesIO()
-        background.save(buffer, format='PNG')
-        buffer.seek(0)
-        image_bytes = buffer.getvalue()
-        image_data = base64.b64encode(image_bytes).decode('utf-8')
-        
-        return f"data:image/png;base64,{image_data}", image_bytes
-    
-    def generate_summary(self, product, client):
-        """Generate a 300-word Instagram caption from product description"""
-        title = product.get('title', '')
-        description = product.get('body_html', '')
-        
-        # Get configuration from environment variables
-        SHOPIFY_SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
-        SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
-        
-        # Fetch author from metafields
-        headers = {
-            'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
-            'Content-Type': 'application/json'
-        }
-        
-        author = None
-        try:
-            metafields_response = requests.get(
-                f'https://{SHOPIFY_SHOP_URL}/admin/api/2024-01/products/{product["id"]}/metafields.json',
-                headers=headers
-            )
-            
-            for metafield in metafields_response.json().get('metafields', []):
-                if metafield.get('namespace') == 'app-ibp-book' and metafield.get('key') == 'authors':
-                    author_value = metafield.get('value')
-                    # Parse JSON array if it's a string
-                    if author_value and isinstance(author_value, str):
-                        try:
-                            import json as json_module
-                            authors_list = json_module.loads(author_value)
-                            if isinstance(authors_list, list):
-                                author = ', '.join(authors_list)
-                            else:
-                                author = author_value
-                        except:
-                            author = author_value
-                    else:
-                        author = author_value
-                    break
-        except:
-            # If fetching metafields fails, continue without author
-            pass
-        
-        # Handle None or empty description
-        if description is None:
-            description = ''
-        
-        # Strip HTML tags
-        import re
-        clean_desc = re.sub('<.*?>', '', str(description))
-        
-        # Format the header
-        header = f"{title}"
-        if author:
-            header = f"{title} ⬤ {author}"
-        
-        # If no OpenAI client or no description, return just the header and description
-        if not client or not clean_desc.strip():
-            # Truncate or pad description to approximately 300 words
-            words = clean_desc.split()
-            if len(words) > 300:
-                clean_desc = ' '.join(words[:300])
-            return f"{header}\n\n{clean_desc}"
-        
-        # Generate with OpenAI
-        prompt = f"""Take the following product description and rewrite it to be exactly 300 words. 
-Keep the content and tone exactly the same - only fix typos, grammar, and improve flow/structure.
-Do not editorialize or change the meaning. Do not add hashtags or emojis.
-
-Original description:
-{clean_desc}
-
-Rules:
-- Keep the same tone and content
-- Fix only typos and grammar
-- Improve flow and structure if needed
-- Make it exactly 300 words
-- Do not add any new information
-- Do not add hashtags or emojis
-- Do not change the meaning or add opinions"""
-
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are a copy editor. Your job is to fix grammar and adjust word count while keeping the original content and tone intact."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.3
-            )
-            
-            return f"{header}\n\n{response.choices[0].message.content}"
-        except Exception as e:
-            # Fallback - just use the original description
-            words = clean_desc.split()
-            if len(words) > 300:
-                clean_desc = ' '.join(words[:300])
-            return f"{header}\n\n{clean_desc}"
-    
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
-        self.wfile.write('Hello from Python GET!'.encode('utf-8'))
+        self.wfile.write('Instagram endpoint is working!'.encode('utf-8'))
         return
     
     def do_OPTIONS(self):
