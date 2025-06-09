@@ -13,14 +13,6 @@ import tempfile
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
-        # Set CORS headers early
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
-        
         try:
             # Parse request body with better error handling
             content_length = self.headers.get('Content-Length')
@@ -112,7 +104,7 @@ class handler(BaseHTTPRequestHandler):
                     'success': False,
                     'error': 'No eligible products found for Instagram post'
                 }
-                self.wfile.write(json.dumps(response_data).encode())
+                self.send_json_response(200, response_data)
                 return
             
             # Select random product
@@ -186,7 +178,7 @@ class handler(BaseHTTPRequestHandler):
                 'post_url': post_url
             }
             
-            self.wfile.write(json.dumps(result).encode())
+            self.send_json_response(200, result)
             
         except Exception as e:
             import traceback
@@ -195,7 +187,22 @@ class handler(BaseHTTPRequestHandler):
                 'error': str(e),
                 'traceback': traceback.format_exc()
             }
-            self.wfile.write(json.dumps(error_response).encode())
+            self.send_json_response(500, error_response)
+    
+    def send_json_response(self, status_code, data):
+        """Helper method to send JSON responses properly"""
+        response_body = json.dumps(data).encode('utf-8')
+        
+        self.send_response(status_code)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_body)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        
+        self.wfile.write(response_body)
+        self.wfile.flush()
     
     def get_posted_products(self):
         """Get list of product IDs that have already been posted"""
