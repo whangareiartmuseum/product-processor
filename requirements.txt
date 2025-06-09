@@ -1,4 +1,5 @@
 requests
 numpy
 openai
-Pillow 
+Pillow
+instagrapi 

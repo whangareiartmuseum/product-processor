@@ -8,8 +8,12 @@ interface InstagramPostDisplayProps {
     product_title: string
     image_data: string
     caption: string
+    full_caption?: string
+    shop_url?: string
     next_post_time: string
     complementary_color: string
+    posted?: boolean
+    post_url?: string
   }
   onRegenerate: () => void
   onMarkPosted: (productId: string) => void
@@ -17,6 +21,8 @@ interface InstagramPostDisplayProps {
 
 export function InstagramPostDisplay({ postData, onRegenerate, onMarkPosted }: InstagramPostDisplayProps) {
   const [timeUntilPost, setTimeUntilPost] = useState('')
+  const [isPosting, setIsPosting] = useState(false)
+  const [postResult, setPostResult] = useState<{ posted: boolean; url?: string } | null>(null)
 
   useEffect(() => {
     const updateTimer = () => {
@@ -40,11 +46,51 @@ export function InstagramPostDisplay({ postData, onRegenerate, onMarkPosted }: I
     return () => clearInterval(interval)
   }, [postData.next_post_time])
 
+  // Check if already posted
+  useEffect(() => {
+    if (postData.posted && postData.post_url) {
+      setPostResult({ posted: true, url: postData.post_url })
+    }
+  }, [postData.posted, postData.post_url])
+
   const handlePost = () => {
     // Mark as posted
     onMarkPosted(postData.product_id)
     // Generate a new post
     onRegenerate()
+  }
+
+  const handleActualPost = async () => {
+    setIsPosting(true)
+    try {
+      const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+      const endpoint = isVercel ? '/api/instagram-generate' : '/api/instagram/generate'
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ post: true })
+      })
+
+      const data = await response.json()
+      
+      if (data.posted) {
+        setPostResult({ posted: true, url: data.post_url })
+        // Automatically generate a new post after successful posting
+        setTimeout(() => {
+          onRegenerate()
+        }, 2000)
+      } else {
+        setPostResult({ posted: false })
+      }
+    } catch (error) {
+      console.error('Failed to post to Instagram:', error)
+      setPostResult({ posted: false })
+    } finally {
+      setIsPosting(false)
+    }
   }
 
   return (
@@ -67,14 +113,52 @@ export function InstagramPostDisplay({ postData, onRegenerate, onMarkPosted }: I
               Generate New Post
             </button>
             <button
-              onClick={handlePost}
-              className="block w-full px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+              onClick={handleActualPost}
+              disabled={isPosting}
+              className={`block w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
+                isPosting 
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-pink-600 text-white hover:bg-pink-700'
+              }`}
             >
-              Mark as Posted
+              {isPosting ? 'Posting...' : 'Post to Instagram'}
+            </button>
+            <button
+              onClick={handlePost}
+              className="block w-full px-6 py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors text-sm"
+            >
+              Mark as Posted (Manual)
             </button>
           </div>
         </div>
       </div>
+
+      {/* Post Result Notification */}
+      {postResult && (
+        <div className={`rounded-lg p-4 ${
+          postResult.posted 
+            ? 'bg-green-50 border border-green-200' 
+            : 'bg-red-50 border border-red-200'
+        }`}>
+          {postResult.posted ? (
+            <div>
+              <p className="text-green-800 font-semibold">✅ Successfully posted to Instagram!</p>
+              {postResult.url && (
+                <a 
+                  href={postResult.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-green-600 underline text-sm mt-1 inline-block"
+                >
+                  View post on Instagram →
+                </a>
+              )}
+            </div>
+          ) : (
+            <p className="text-red-800 font-semibold">❌ Failed to post to Instagram. Check your credentials.</p>
+          )}
+        </div>
+      )}
 
       {/* Instagram Post Preview */}
       <div className="bg-gray-100 rounded-lg p-6">
@@ -125,7 +209,7 @@ export function InstagramPostDisplay({ postData, onRegenerate, onMarkPosted }: I
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">{postData.caption}</p>
+                <p className="text-sm text-gray-800 whitespace-pre-wrap">{postData.full_caption || postData.caption}</p>
               </div>
 
               <p className="text-xs text-gray-500 mt-3">
@@ -160,6 +244,19 @@ export function InstagramPostDisplay({ postData, onRegenerate, onMarkPosted }: I
             <span className="text-blue-700 font-medium">Caption Length:</span>
             <span className="ml-2 text-blue-800">{postData.caption.split(' ').length} words</span>
           </div>
+          {postData.shop_url && (
+            <div className="col-span-2">
+              <span className="text-blue-700 font-medium">Shop URL:</span>
+              <a 
+                href={postData.shop_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="ml-2 text-blue-600 underline"
+              >
+                {postData.shop_url}
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,14 +8,28 @@ import base64
 from datetime import datetime, timedelta
 import random
 from openai import OpenAI
+from instagrapi import Client
+import tempfile
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
+            # Parse request body
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            # Check if this is an actual post request
+            should_post = data.get('post', False)
+            
             # Get configuration from environment variables
             SHOPIFY_SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
             SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
             OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'REDACTED_OPENAI_KEY')
+            
+            # Instagram credentials
+            INSTAGRAM_USERNAME = os.environ.get('INSTAGRAM_USERNAME', '')
+            INSTAGRAM_PASSWORD = os.environ.get('INSTAGRAM_PASSWORD', '')
             
             # Initialize OpenAI client only if API key is available
             if OPENAI_API_KEY:
@@ -91,10 +105,51 @@ class handler(BaseHTTPRequestHandler):
             complementary_color = selected['complementary_color']
             
             # Create Instagram image
-            image_data = self.create_instagram_image(product, complementary_color)
+            image_data, image_bytes = self.create_instagram_image(product, complementary_color)
             
             # Generate caption
             caption = self.generate_summary(product, client)
+            
+            # Add shop link and hashtags to caption
+            shop_url = f"https://{SHOPIFY_SHOP_URL}/products/{product['handle']}"
+            full_caption = f"{caption}\n\n🛍️ Shop: {shop_url}\n\n#whangāreiartmuseum #nzart #artbooks #museumshop"
+            
+            # Post to Instagram if requested and credentials are available
+            posted = False
+            post_url = None
+            
+            if should_post and INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD:
+                try:
+                    # Initialize Instagram client
+                    ig_client = Client()
+                    ig_client.login(INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD)
+                    
+                    # Save image to temporary file
+                    with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_file:
+                        # Convert image bytes to PIL Image
+                        img = Image.open(io.BytesIO(image_bytes))
+                        # Convert to RGB if necessary (Instagram doesn't support transparency)
+                        if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                        img.save(tmp_file, 'JPEG', quality=95)
+                        tmp_path = tmp_file.name
+                    
+                    # Upload photo
+                    media = ig_client.photo_upload(tmp_path, full_caption)
+                    
+                    # Clean up temp file
+                    os.unlink(tmp_path)
+                    
+                    # Mark product as posted
+                    self.mark_product_as_posted(product['id'])
+                    
+                    posted = True
+                    post_url = f"https://instagram.com/p/{media.code}"
+                    
+                except Exception as e:
+                    # If posting fails, still return the generated content
+                    posted = False
+                    post_url = None
             
             # Calculate next post time (tomorrow at 10 AM)
             tomorrow = datetime.now() + timedelta(days=1)
@@ -106,8 +161,12 @@ class handler(BaseHTTPRequestHandler):
                 'product_title': product['title'],
                 'image_data': image_data,
                 'caption': caption,
+                'full_caption': full_caption,
+                'shop_url': shop_url,
                 'next_post_time': next_post_time.isoformat(),
-                'complementary_color': complementary_color
+                'complementary_color': complementary_color,
+                'posted': posted,
+                'post_url': post_url
             }
             
             self.send_response(200)
@@ -123,9 +182,15 @@ class handler(BaseHTTPRequestHandler):
     
     def get_posted_products(self):
         """Get list of product IDs that have already been posted"""
-        # In serverless environment, we can't persist files
-        # In a real implementation, you would use a database or external storage
+        # In a real implementation, you would fetch this from a Shopify metafield
+        # or external storage to persist across serverless invocations
         return []
+    
+    def mark_product_as_posted(self, product_id):
+        """Mark a product as posted to Instagram"""
+        # In a real implementation, you would update a Shopify metafield
+        # or external storage to persist this information
+        pass
     
     def create_instagram_image(self, product, complementary_color):
         """Create Instagram square image with product on complementary color background"""
@@ -151,12 +216,14 @@ class handler(BaseHTTPRequestHandler):
         else:
             background.paste(product_img, (x, y))
         
-        # Convert to base64
+        # Convert to base64 for preview
         buffer = io.BytesIO()
         background.save(buffer, format='PNG')
-        image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.seek(0)
+        image_bytes = buffer.getvalue()
+        image_data = base64.b64encode(image_bytes).decode('utf-8')
         
-        return f"data:image/png;base64,{image_data}"
+        return f"data:image/png;base64,{image_data}", image_bytes
     
     def generate_summary(self, product, client):
         """Generate a 300-word Instagram caption from product description"""
