@@ -182,7 +182,20 @@ class handler(BaseHTTPRequestHandler):
             
             for metafield in metafields_response.json().get('metafields', []):
                 if metafield.get('namespace') == 'app-ibp-book' and metafield.get('key') == 'authors':
-                    author = metafield.get('value')
+                    author_value = metafield.get('value')
+                    # Parse JSON array if it's a string
+                    if author_value and isinstance(author_value, str):
+                        try:
+                            import json as json_module
+                            authors_list = json_module.loads(author_value)
+                            if isinstance(authors_list, list):
+                                author = ', '.join(authors_list)
+                            else:
+                                author = author_value
+                        except:
+                            author = author_value
+                    else:
+                        author = author_value
                     break
         except:
             # If fetching metafields fails, continue without author
