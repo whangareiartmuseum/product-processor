@@ -292,6 +292,34 @@ export function ResultsPanel({ results, isProcessing, logs = [], onStop, activeP
             </pre>
           </div>
         )}
+
+        {/* Book categories preview */}
+        {results.data?.updated && Array.isArray(results.data.updated) && results.data.updated.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-md p-4">
+            <h4 className="font-semibold text-gray-900 mb-3">Book Categories (sample)</h4>
+            <div className="space-y-3 max-h-[300px] overflow-y-auto">
+              {results.data.updated.slice(0, 10).map((item: any, idx: number) => (
+                <div key={item.id || idx} className="border border-gray-200 rounded p-3">
+                  <p className="font-semibold text-gray-800">
+                    {idx + 1}. {item.title || 'Untitled'} {item.handle ? `(${item.handle})` : ''}
+                  </p>
+                  <div className="mt-2 space-y-1">
+                    {(item.categories || []).slice(0, 5).map((cat: any, catIdx: number) => (
+                      <p key={catIdx} className="text-sm text-gray-700">
+                        • {cat.name || 'Category'}{cat.reason ? ` — ${cat.reason}` : ''}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {results.data.updated.length > 10 && (
+                <p className="text-sm text-gray-600 italic">
+                  ...and {results.data.updated.length - 10} more products updated
+                </p>
+              )}
+            </div>
+          </div>
+        )}
         
         {/* Special handling for missing descriptions report */}
         {results.products_missing_descriptions && (

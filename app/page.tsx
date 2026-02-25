@@ -78,6 +78,13 @@ export default function Home() {
       description: 'Create a daily Instagram post with product image and AI-generated caption',
       icon: '📸',
       endpoint: isVercel ? '/api/instagram-generate' : '/api/instagram/generate'
+    },
+    {
+      id: 'book-categories',
+      title: 'Generate Book Categories',
+      description: 'Create book categories from descriptions with AI + topical cues',
+      icon: '📚',
+      endpoint: '/api/book-categories'
     }
   ]
 
