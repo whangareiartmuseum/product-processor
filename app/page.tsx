@@ -217,12 +217,10 @@ export default function Home() {
                 process={process}
                 isActive={activeProcess === process.id}
                 onSelect={() => setActiveProcess(process.id)}
-                onRun={(params: any) => {
-                  const currentProcess = processes.find(p => p.id === activeProcess)
-                  if (currentProcess) {
-                    runProcess(currentProcess.endpoint, params)
-                  }
-                }}
+              onRun={(selectedProcess: Process, params: any) => {
+                setActiveProcess(selectedProcess.id)
+                runProcess(selectedProcess.endpoint, params)
+              }}
                 isProcessing={isProcessing && activeProcess === process.id}
               />
             ))}

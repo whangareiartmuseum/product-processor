@@ -16,7 +16,7 @@ interface ProcessPanelProps {
   process: Process
   isActive: boolean
   onSelect: () => void
-  onRun: (params: any) => void
+  onRun: (process: Process, params: any) => void
   isProcessing: boolean
 }
 
@@ -31,7 +31,7 @@ export function ProcessPanel({
 
   const handleRun = () => {
     const params = process.requiresInput ? { input: inputValue } : {}
-    onRun(params)
+    onRun(process, params)
   }
 
   return (
