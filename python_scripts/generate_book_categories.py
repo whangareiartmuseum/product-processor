@@ -11,6 +11,8 @@ OVERWRITE_EXISTING = True
 MAX_CATEGORIES = 5
 OPENAI_MODEL = "gpt-4o"
 SHOPIFY_API_VERSION = "2024-01"
+METAFIELD_NAMESPACE = "app-ibp-book"
+METAFIELD_KEY = "categories"
 
 # Logging (console only; /tmp for serverless if available)
 log_handlers = [logging.StreamHandler()]
@@ -60,14 +62,14 @@ def fetch_products(cursor: str = None, acc: List[Dict[str, Any]] = None) -> List
             tags
             productType
             vendor
-            metafield(namespace: "custom", key: "book_categories") {
+            metafield(namespace: "%s", key: "%s") {
               value
             }
           }
         }
       }
     }
-    """
+    """ % (METAFIELD_NAMESPACE, METAFIELD_KEY)
 
     variables = {"cursor": cursor} if cursor else {}
     resp = requests.post(
@@ -183,8 +185,8 @@ def save_categories(product_id: str, categories: List[Dict[str, Any]]) -> bool:
                 "id": product_id,
                 "metafields": [
                     {
-                        "namespace": "custom",
-                        "key": "book_categories",
+                        "namespace": METAFIELD_NAMESPACE,
+                        "key": METAFIELD_KEY,
                         "type": "json",
                         "value": json.dumps(
                             {
