@@ -4,7 +4,7 @@
   "description": "Web-based Shopify product processor for colors, recommendations, and metadata management",
   "private": true,
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev --turbopack",
