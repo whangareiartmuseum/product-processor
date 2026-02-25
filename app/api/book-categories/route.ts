@@ -4,7 +4,7 @@ export async function POST(request: NextRequest) {
   try {
     // On Vercel, proxy to the Python serverless function
     if (process.env.VERCEL_URL) {
-      const pythonUrl = `https://${process.env.VERCEL_URL}/api/book-categories`
+      const pythonUrl = `https://${process.env.VERCEL_URL}/api/python/book-categories`
       const response = await fetch(pythonUrl, { method: 'POST' })
       if (!response.ok) {
         throw new Error(`Python API returned ${response.status}`)

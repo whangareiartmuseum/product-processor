@@ -273,6 +273,7 @@ def process_all() -> Dict[str, Any]:
 
     summary = {
         "message": "Book categories generation completed",
+        "processType": "book_categories",
         "total_products": total,
         "updated": len(updated),
         "skipped": len(skipped),
