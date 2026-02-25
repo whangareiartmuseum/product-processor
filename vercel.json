@@ -5,7 +5,7 @@
     "app/api/**/*.ts": {
       "maxDuration": 300
     },
-    "api/*.py": {
+    "api/**/*.py": {
       "maxDuration": 300
     }
   }
