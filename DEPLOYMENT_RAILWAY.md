@@ -20,8 +20,8 @@ brew install railway
    In Railway dashboard, go to Variables and add:
    ```
    SHOPIFY_SHOP_URL=your-store.myshopify.com
-   SHOPIFY_ACCESS_TOKEN=REDACTED_SHOPIFY_TOKEN
-   OPENAI_API_KEY=REDACTED_OPENAI_KEY
+   SHOPIFY_ACCESS_TOKEN=shpat_your_access_token
+   OPENAI_API_KEY=sk-proj-your_openai_key
    ```
 
 5. **Deploy**:
@@ -48,8 +48,8 @@ railway up
 
 # Add environment variables
 railway variables set SHOPIFY_SHOP_URL=your-store.myshopify.com
-railway variables set SHOPIFY_ACCESS_TOKEN=REDACTED_SHOPIFY_TOKEN
-railway variables set OPENAI_API_KEY=sk-proj-...
+railway variables set SHOPIFY_ACCESS_TOKEN=shpat_your_access_token
+railway variables set OPENAI_API_KEY=sk-proj-your_openai_key
 
 # Deploy
 railway up

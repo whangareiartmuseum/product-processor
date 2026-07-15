@@ -18,11 +18,11 @@ The Product Processor app requires these environment variables to be set in Verc
 4. Click on **Environment Variables** in the left sidebar
 5. Add each variable:
    - **Key**: `SHOPIFY_SHOP_URL`
-   - **Value**: `your-store.myshopify.com` (or your store URL)
+   - **Value**: `your-store.myshopify.com`
    - **Environment**: Select all (Production, Preview, Development)
    - Click **Save**
 6. Repeat for the other variables:
-   - **SHOPIFY_ACCESS_TOKEN**: `REDACTED_SHOPIFY_TOKEN`
+   - **SHOPIFY_ACCESS_TOKEN**: `shpat_your_access_token`
    - **OPENAI_API_KEY**: Your OpenAI API key
 7. After adding all variables, go to the **Deployments** tab
 8. Click the three dots menu on the latest deployment and select **Redeploy**
@@ -72,8 +72,8 @@ For local development, create a `.env.local` file in the project root:
 
 ```env
 SHOPIFY_SHOP_URL=your-store.myshopify.com
-SHOPIFY_ACCESS_TOKEN=REDACTED_SHOPIFY_TOKEN
-OPENAI_API_KEY=your-openai-api-key
+SHOPIFY_ACCESS_TOKEN=shpat_your_access_token
+OPENAI_API_KEY=sk-proj-your_openai_key
 ```
 
 This file is already in `.gitignore` and won't be committed to the repository. 

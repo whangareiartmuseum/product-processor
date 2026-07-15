@@ -11,10 +11,9 @@ import random
 from openai import OpenAI
 
 # Get configuration from environment variables
-SHOPIFY_SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
-SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
-# Note: Please set OPENAI_API_KEY as an environment variable
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'REDACTED_OPENAI_KEY')
+SHOPIFY_SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', '')
+SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', '')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))

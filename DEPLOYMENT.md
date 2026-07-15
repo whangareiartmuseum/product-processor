@@ -49,8 +49,8 @@ In Vercel's project settings, add these environment variables:
 
 ```
 SHOPIFY_SHOP_URL=your-store.myshopify.com
-SHOPIFY_ACCESS_TOKEN=REDACTED_SHOPIFY_TOKEN
-OPENAI_API_KEY=REDACTED_OPENAI_KEY_PARTIAL....[your full key]
+SHOPIFY_ACCESS_TOKEN=shpat_your_access_token
+OPENAI_API_KEY=sk-proj-your_openai_key
 ```
 
 ### 5. Python Dependencies

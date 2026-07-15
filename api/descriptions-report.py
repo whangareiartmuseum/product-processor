@@ -7,8 +7,8 @@ from datetime import datetime
 import time
 
 # Get configuration from environment variables
-SHOPIFY_SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', 'your-store.myshopify.com')
-SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', 'REDACTED_SHOPIFY_TOKEN')
+SHOPIFY_SHOP_URL = os.environ.get('SHOPIFY_SHOP_URL', '')
+SHOPIFY_ACCESS_TOKEN = os.environ.get('SHOPIFY_ACCESS_TOKEN', '')
 
 def get_all_products_with_descriptions(cursor=None, products=None):
     """
